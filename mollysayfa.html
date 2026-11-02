@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molly</title>
+
+    <style>
+        :root {
+            --z: 1;
+            --u: calc(1vw * var(--z));
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: auto;
+            font-family: Arial, sans-serif;
+            background-color: bisque;
+            background-image: url('otherpage.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Ana Kapsayıcı: Üst Butonlar - Slayt Kutusu - Alt Butonlar */
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: calc(1.2 * var(--u));
+            padding: calc(1.5 * var(--u));
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Müzik ve Kalp Buton Satırları */
+        .button-row {
+            display: flex;
+            gap: calc(1 * var(--u));
+            padding-left: calc(1.5 * var(--u));
+            flex-wrap: nowrap;
+        }
+
+        .action-btn {
+            background-color: darkred;
+            color: white;
+            padding: calc(0.6 * var(--u)) calc(1.3 * var(--u));
+            font-size: calc(1.05 * var(--u));
+            border: calc(0.1 * var(--u)) solid rgba(0, 0, 0, 0.4);
+            border-radius: calc(1.2 * var(--u));
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: green;
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Slayt Gösterisi Kutusu */
+        #image-container {
+            width: calc(45 * var(--u));
+            height: calc(35 * var(--u));
+            position: relative;
+            overflow: hidden;
+            background-color: transparent;
+            border-style: double;
+            border-color: goldenrod;
+            border-width: calc(1.1 * var(--u));
+            border-radius: 5%;
+            box-shadow: 0 calc(0.4 * var(--u)) calc(1.2 * var(--u)) rgba(0, 0, 0, 0.5);
+        }
+
+        #image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Sağ ve Sol Oklar */
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: calc(1.4 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #fff;
+            border: calc(0.08 * var(--u)) solid #000;
+            padding: calc(0.6 * var(--u)) calc(0.8 * var(--u));
+            color: #000;
+            text-align: center;
+            border-radius: calc(0.3 * var(--u));
+            user-select: none;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .arrow:hover {
+            background-color: #ddd;
+        }
+
+        #left-arrow {
+            left: calc(0.7 * var(--u));
+        }
+
+        #left-arrow:hover {
+            color: #ff0000;
+        }
+
+        #right-arrow {
+            right: calc(0.7 * var(--u));
+        }
+
+        #right-arrow:hover {
+            color: #00ff00;
+        }
+
+        /* Slayt Başlat/Durdur Butonu */
+        #slideshow-btn {
+            position: absolute;
+            bottom: calc(0.7 * var(--u));
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: calc(0.95 * var(--u));
+            padding: calc(0.5 * var(--u)) calc(1 * var(--u));
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: calc(0.3 * var(--u));
+            white-space: nowrap;
+            transition: background-color 0.3s;
+        }
+
+        #slideshow-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Kalp Yağmuru Efektleri */
+        .heartflake {
+            position: fixed;
+            width: calc(2.5 * var(--u));
+            height: calc(2.2 * var(--u));
+            background-image: url('heart2.png');
+            background-size: cover;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        body.scrollbar-active::-webkit-scrollbar {
+            display: none;
+            visibility: hidden;
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
+
+    <div class="page-wrapper">
+
+        <!-- Üst Müzik Butonları -->
+        <div class="button-row">
+            <input type="button" class="action-btn" value="Music Box" onclick="playRandomSound();">
+            <input type="button" class="action-btn" value="Stop Music" onclick="stopMusic();">
+            <span id="player"></span>
+        </div>
+
+        <!-- Orta Slayt Çerçevesi -->
+        <div id="image-container">
+            <img id="image" src="" alt="Image">
+            <div id="left-arrow" class="arrow">&lt;</div>
+            <div id="right-arrow" class="arrow">&gt;</div>
+            <button id="slideshow-btn">Stop Slideshow</button>
+        </div>
+
+        <!-- Alt Kalp Yağmuru Butonları -->
+        <div class="button-row">
+            <button id="startBtnheart" class="action-btn">Heart Start</button>
+            <button id="stopBtnheart" class="action-btn">Heart Finish</button>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. Hem Pencere Boyutu Hem Ctrl+Scroll Ölçekleme
+        var baseDPR = window.devicePixelRatio || 1;
+
+        function updateScale() {
+            var currentDPR = window.devicePixelRatio || 1;
+            var zoomFactor = currentDPR / baseDPR;
+            document.documentElement.style.setProperty('--z', zoomFactor);
+        }
+        updateScale();
+        window.addEventListener('resize', updateScale);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateScale);
+        }
+
+        // 2. Slayt Gösterisi (Slideshow)
+        let currentIndex = 0;
+        let slideshowInterval = null;
+
+        const images = [
+            'mollyhtml1.jpg'
+        ];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function showImage(index) {
+            const image = document.getElementById('image');
+            if (index < 0) {
+                currentIndex = images.length - 1;
+            } else if (index >= images.length) {
+                currentIndex = 0;
+            } else {
+                currentIndex = index;
+            }
+            image.src = images[currentIndex];
+        }
+
+        function startSlideshow() {
+            stopSlideshow();
+            shuffleArray(images);
+            showImage(0);
+            slideshowInterval = setInterval(() => {
+                showImage(currentIndex + 1);
+            }, 5000);
+        }
+
+        function stopSlideshow() {
+            clearInterval(slideshowInterval);
+            slideshowInterval = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const leftArrow = document.getElementById('left-arrow');
+            const rightArrow = document.getElementById('right-arrow');
+            const slideshowBtn = document.getElementById('slideshow-btn');
+
+            leftArrow.addEventListener('click', () => {
+                showImage(currentIndex - 1);
+            });
+
+            rightArrow.addEventListener('click', () => {
+                showImage(currentIndex + 1);
+            });
+
+            slideshowBtn.addEventListener('click', () => {
+                if (slideshowInterval) {
+                    stopSlideshow();
+                    slideshowBtn.textContent = 'Start Slideshow';
+                } else {
+                    startSlideshow();
+                    slideshowBtn.textContent = 'Stop Slideshow';
+                }
+            });
+
+            startSlideshow();
+        });
+
+        // 3. Müzik Kutusu
+        var audioElement;
+
+        function playRandomSound() {
+            stopMusic();
+            var sounds = [
+                "darkness.mp3",
+                "akon.mp3",
+                "Glass Animals.mp3",
+                "chain.mp3",
+                "ozone.mp3",
+                "maroon.mp3",
+                "reason.mp3",
+                "waving Flag.mp3",
+                "Let Me Down Slowly.mp3",
+                "forever.mp3",
+                "Benikendindenkurtar.mp3",
+                "Nothingelsematter.mp3",
+                "senidertetmeler.mp3",
+                "instasamka.mp3"
+            ];
+            var soundFile = sounds[Math.floor(Math.random() * sounds.length)];
+            audioElement = new Audio(soundFile);
+            audioElement.loop = true;
+            audioElement.play();
+        }
+
+        function stopMusic() {
+            if (audioElement && !audioElement.paused) {
+                audioElement.pause();
+            }
+        }
+
+        // 4. Kalp Yağmuru
+        document.getElementById('startBtnheart').addEventListener('click', startHeartfall);
+        document.getElementById('stopBtnheart').addEventListener('click', stopHeartfall);
+
+        let heartInterval;
+
+        function startHeartfall() {
+            document.body.classList.add('scrollbar-active');
+            clearInterval(heartInterval);
+            heartInterval = setInterval(createHeartflake, 1000);
+        }
+
+        function stopHeartfall() {
+            document.body.classList.remove('scrollbar-active');
+            clearInterval(heartInterval);
+        }
+
+        function createHeartflake() {
+            const heartflake = document.createElement('div');
+            heartflake.className = 'heartflake';
+            document.body.appendChild(heartflake);
+
+            const startPositionX = Math.random() * Math.max(100, window.innerWidth - 60) + 10;
+            heartflake.style.left = startPositionX + 'px';
+            heartflake.style.top = '-40px';
+
+            let speedY = 2;
+            let speedX = Math.random() < 0.5 ? -1 : 1;
+
+            const moveId = setInterval(() => {
+                const currentTop = parseFloat(heartflake.style.top);
+                const currentLeft = parseFloat(heartflake.style.left);
+
+                heartflake.style.top = (currentTop + speedY) + 'px';
+                heartflake.style.left = (currentLeft + speedX) + 'px';
+
+                if (currentTop > window.innerHeight || currentLeft > window.innerWidth || currentLeft < 0) {
+                    clearInterval(moveId);
+                    heartflake.remove();
+                }
+            }, 15);
+        }
+    </script>
+</body>
+</html>
