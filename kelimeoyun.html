@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <title>Secovvv - Kelime Oyunu</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="level2.css" />
+
+    <style>
+        :root {
+            --z: 1;
+            --u: calc(1vw * var(--z));
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(360deg, black, white);
+            background-attachment: fixed;
+            font-family: 'Arial', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        #container {
+            width: calc(50 * var(--u));
+            min-height: calc(42 * var(--u));
+            background: rgba(255, 255, 255, 0.3);
+            padding: calc(2 * var(--u));
+            border-radius: calc(0.8 * var(--u));
+            box-shadow: 0 0 calc(1.5 * var(--u)) rgba(0, 0, 0, 0.3);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            margin: calc(2 * var(--u)) auto;
+        }
+
+        h1 {
+            width: 100%;
+            color: #fff;
+            text-align: center;
+            font-size: calc(2.8 * var(--u));
+            border: calc(0.2 * var(--u)) solid #fff;
+            background: linear-gradient(360deg, black, white);
+            padding: calc(0.8 * var(--u));
+            border-radius: calc(0.7 * var(--u));
+            margin-top: calc(1 * var(--u));
+            margin-bottom: calc(1.5 * var(--u));
+            text-shadow: calc(0.15 * var(--u)) calc(0.15 * var(--u)) calc(0.3 * var(--u)) rgba(0, 0, 0, 0.3);
+        }
+
+        #hint-display {
+            font-size: calc(2.2 * var(--u));
+            color: black;
+            text-align: center;
+            min-height: calc(2.8 * var(--u));
+            margin-bottom: calc(0.5 * var(--u));
+            font-weight: bold;
+        }
+
+        #word-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #word-display {
+            font-size: calc(3.6 * var(--u));
+            color: black;
+            text-align: center;
+            margin: calc(0.8 * var(--u)) 0 calc(1.2 * var(--u)) 0;
+            letter-spacing: calc(0.15 * var(--u));
+            word-break: break-all;
+        }
+
+        #user-input {
+            font-size: calc(2.2 * var(--u));
+            text-align: center;
+            width: 80%;
+            padding: calc(0.6 * var(--u));
+            margin-bottom: calc(1.2 * var(--u));
+            border: calc(0.15 * var(--u)) solid #333;
+            border-radius: calc(0.4 * var(--u));
+            outline: none;
+        }
+
+        #user-input::placeholder {
+            color: red;
+        }
+
+        #correct-message,
+        #incorrect-message,
+        #score-message,
+        #best-time-message,
+        #streak-record,
+        #completion-message,
+        #correct-answer {
+            text-align: center;
+            margin-top: calc(0.6 * var(--u));
+        }
+
+        #correct-message {
+            color: green;
+            font-size: calc(2.4 * var(--u));
+            font-weight: bold;
+        }
+
+        #incorrect-message {
+            color: red;
+            font-size: calc(2.4 * var(--u));
+            font-weight: bold;
+        }
+
+        #score-message,
+        #best-time-message,
+        #streak-record {
+            color: black;
+            font-size: calc(1.8 * var(--u));
+        }
+
+        #completion-message,
+        #correct-answer {
+            color: green;
+            font-weight: bold;
+            font-size: calc(1.8 * var(--u));
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <h1>Kelime Oyunu</h1>
+
+        <!-- İpucu Alanı -->
+        <div id="hint-display"></div>
+
+        <form id="word-form">
+            <p id="word-display"></p>
+
+            <input type="text" id="user-input" placeholder="" autocomplete="off" class="hidden">
+            <div id="completion-message"></div>
+            <div id="correct-message"></div>
+            <div id="incorrect-message"></div>
+            <div id="score-message"></div>
+            <div id="best-time-message"></div>
+            <div id="streak-record"></div>
+            <div id="correct-answer"></div>
+        </form>
+    </div>
+
+    <script>
+        // 1. Hem Pencere Boyutu Hem Ctrl+Scroll Ölçekleme
+        var baseDPR = window.devicePixelRatio || 1;
+
+        function updateScale() {
+            var currentDPR = window.devicePixelRatio || 1;
+            var zoomFactor = currentDPR / baseDPR;
+            document.documentElement.style.setProperty('--z', zoomFactor);
+        }
+        updateScale();
+        window.addEventListener('resize', updateScale);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateScale);
+        }
+
+        // 2. Kelime Oyunu Mekanikleri
+        const words = [
+            'gergedan', 'bilgisayar', 'teleskop', 'elyapımı', 'yenilemek', 'pilot', 'öğretmen', 'lösemi', 'uyuz', 'kanser', 'verem', 'kemer', 'silsile',
+            'teknisyen', 'işçi', 'avukat', 'doktor', 'mühendis', 'oduncu', 'çiftçi', 'köylü', 'değirmenci', 'hemşire', 'host', 'anakart', 'işlemci', 'bellek', 'türkiye',
+            'atatürk', 'samanyolu', 'andromeda', 'nebula', 'kozmos', 'yıldız', 'karadelik', 'gökyüzü', 'anatomik', 'astronomik', 'evren', 'dişçi', 'pandemi', 'bermuda', 'kemençe',
+            'keman', 'gitar', 'flüt', 'mızıka', 'kalimba', 'piyano', 'org', 'bağlama', 'davudi', 'nota', 'atom', 'gevelemek', 'savsaklamak', 'derlemek', 'demiryolu',
+            'yastık', 'yorgan', 'eğlenmek', 'gecelemek', 'gecelik', 'tersane', 'testosteron', 'zorlamak', 'dertleşmek', 'penguen', 'tilki', 'aslan', 'kaplan', 'kedi', 'tavuk',
+            'yılan', 'porsuk', 'köstebek', 'susamuru', 'kartal', 'şahin', 'atmaca', 'kelaynak', 'karabatak', 'zürafa', 'fil', 'karakulak', 'zebra', 'antilop', 'çita', 'sırtlan',
+            'orangutan', 'palyaço', 'tezkere', 'fermantasyon', 'gökyüzü', 'yeryüzü', 'okyanus', 'vadi', 'plato', 'futbol', 'basketbol', 'voleybol', 'lena', 'leo', 'molly',
+            'şirin', 'samur', 'zeko', 'tatlı', 'salem', 'çilli', 'cici', 'elmas', 'luna', 'çılgın', 'deformasyon', 'zurna', 'misket', 'ayakkabı', 'pençe', 'terlemek',
+            'bastırmak', 'sevgi', 'keklik', 'saman', 'buldozer', 'zerdecal', 'zencefil', 'karabiber', 'domates', 'monitör', 'ivedi', 'zina', 'ferrari', 'kader', 'zeynep',
+            'ipek', 'zehra', 'nazar', 'raket', 'tırnak', 'baza', 'ispirto', 'ispinoz', 'ağaçkakan', 'joker', 'elem', 'tanzim', 'mimar', 'alçıpan', 'panelvan', 'sedan', 'skoda',
+            'opel', 'mercedes', 'volvo', 'voltran', 'uyuşuk', 'candan', 'telefon', 'anahtar', 'çadır', 'rakip', 'marmaris', 'muğla', 'istanbul', 'ankara', 'izmir',
+            'diyarbakır', 'van', 'döşeme', 'direksiyon', 'piston', 'kaporta', 'samsun', 'ordu', 'ünye', 'elma', 'ananas', 'karpuz', 'kavun', 'incir', 'çilek', 'portakal', 'narenciye',
+            'nar', 'nermin', 'emel', 'seçkin', 'fatih', 'osman', 'kağan', 'ahmet', 'mehmet', 'tarkan', 'yatak', 'ranza', 'piano', 'serzeniş', 'tuğla', 'maskot', 'dünya', 'venüs', 'merkür',
+            'mars', 'jupiter', 'satürn', 'neptün', 'uranüs', 'mobil', 'portatif', 'ezberlemek', 'gezmek', 'dilber', 'ferman', 'bayır', 'derya', 'deniz', 'asma', 'pelikan',
+            'zaruri', 'ziynet', 'zillet', 'zarif', 'zerafet', 'zemin', 'sanat', 'resim', 'müzik', 'heykel', 'galatasaray', 'fenerbahçe', 'beşiktaş', 'bursaspor', 'trabzonspor',
+            'hatay', 'hayat', 'sebil', 'suna', 'arsız', 'akdeniz', 'karadeniz', 'ege', 'gebe', 'fellah', 'rahman', 'azami', 'minimal', 'mazi', 'semi', 'sami', 'furkan', 'ahmak',
+            'sapık', 'suratsız', 'zampara', 'tabela', 'talebe', 'tatil', 'sahil', 'silah', 'edebi', 'ebedi', 'nadan', 'balta', 'binaenaleyh', 'bilmukabele', 'astım', 'corona', 'fani',
+            'baki', 'saki', 'afaki', 'naif', 'sultan', 'nadiren', 'çömez', 'hamak', 'zımpara', 'otomasyon', 'latife', 'mikrobik', 'mikrop', 'mikro', 'feraset', 'ehemmiyet', 'ehliyet',
+            'zabıta', 'polis', 'jandarma', 'bandırma', 'sundurma', 'sümsük', 'kehribar', 'ametist', 'ahududu', 'nacizane', 'pastırma', 'corvette', 'çakal', 'marsık', 'zebani',
+            'arkadaş', 'dost', 'tost', 'fakülte', 'üniversite', 'bayındırlık', 'arabulucu', 'meditasyon', 'mimandar', 'mersiye', 'zılgıt', 'tavşan', 'kirpi', 'kaplumbağa',
+            'kurbağa', 'jenerik', 'jamaika', 'jordan', 'patinaj', 'drift', 'leblebi', 'nohut', 'sayıklamak', 'sızlanmak', 'santimetre', 'milimetre', 'dekor', 'rekor', 'kavanoz', 'gümüş',
+            'altın', 'çelik', 'bakır', 'rakı', 'bira', 'viski', 'şarap', 'aspirin', 'eflatun', 'sermaye', 'topaç', 'hacıyatmaz', 'serdengeçti', 'aşık', 'vantilatör', 'sustalı', 'çakı',
+            'darbuka', 'simokin', 'hoparlör', 'spor', 'sinyorita', 'alaylı', 'akademi', 'terzi', 'rahmetli', 'akut', 'dental', 'dişçi', 'pist', 'zanlı', 'tübitak', 'devran', 'taf', 'metar',
+            'icao', 'harekatçı', 'fanila', 'pijama', 'fauna', 'elit', 'ekosistem', 'tevrat', 'incil', 'kuran', 'matematik', 'fizik', 'kimya', 'tarih', 'bilim', 'bilmece', 'kelime',
+            'senatör', 'prostat', 'zırlamak', 'takıntı', 'suratsız', 'hırçın', 'asabi', 'akabinde', 'sonradan', 'fırtına', 'yağmur', 'dolu', 'aheste', 'şarjör', 'bestelemek',
+            'formalite', 'defans', 'ofset', 'hüsnüzan', 'sabotaj', 'kabotaj', 'korsan', 'denizci', 'miço', 'rezil', 'köpek', 'sebze', 'meyve', 'alamet', 'selamet', 'abartmak',
+            'hastane', 'kestane', 'meyhane', 'denizaltı', 'ubot', 'normandiya', 'dday', 'maskara', 'terane', 'kesir', 'çakozlamak', 'sırıtmak', 'gülümsemek', 'kandırmak', 'aldatmak',
+            'saklanmak', 'aşikar', 'bestekar', 'sahtekar', 'kamarot', 'manto', 'salto', 'sendelemek', 'atışmak', 'sataşmak', 'avanak', 'yarasa', 'kobra', 'danaburnu', 'tarantula',
+            'piton', 'karınca', 'tolstoy', 'çekim', 'teklemek', 'pert', 'sürdürmek', 'postal', 'keşkek', 'seksek', 'nakıs', 'falaka', 'kahır', 'andaç', 'yıllık', 'tercüman', 'alize', 'fasık',
+            'karbon', 'titanyum', 'gumus', 'altın', 'bor', 'balzamik', 'asit', 'uranyum', 'tercih', 'katman', 'tokmak', 'sonar', 'sonra', 'zemheri', 'ırak', 'sabit', 'portatif', 'zehir',
+            'yararlı', 'zararlı', 'gücenmek', 'güzel', 'çirkin', 'bedbaht', 'aşikar', 'antivirüs', 'koruma', 'güvenlik', 'pudra', 'şeker', 'erimek', 'şaşırmak', 'sabun', 'kitabe', 'postacı',
+            'kargo', 'paketleyici', 'kargocu', 'vurmak', 'farklılık', 'değişiklik', 'takas', 'baskı', 'kartpostal', 'faraza', 'terlik', 'asuman', 'bahtiyar', 'kumru', 'korgan', 'fatsa',
+            'gelibolu', 'tuzlu', 'ekşi', 'bestelemek', 'bestezen', 'yazar', 'grafiker', 'üzüm', 'tarçın', 'kırağı', 'zıvana', 'kesekağıdı', 'kese', 'felç', 'indirmek', 'inmek', 'sinmek',
+            'trafo', 'terfi', 'güzide', 'erik', 'muşmula', 'cazibe', 'cuzzi', 'sözlük', 'tosun', 'düve'
+        ];
+
+        let bestTime = Infinity;
+        let currentStreak = 0;
+        let bestStreak = 0;
+        let gameTimer;
+        let inputEnabled = true;
+
+        function shuffleWord(word) {
+            return word.split('').sort(function () { return 0.5 - Math.random(); }).join('');
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startGame() {
+            let currentIndex = 0;
+            let startTime;
+            let hintTimer1, hintTimer2, hintTimer3;
+
+            function newRound() {
+                if (hintTimer1) clearTimeout(hintTimer1);
+                if (hintTimer2) clearTimeout(hintTimer2);
+                if (hintTimer3) clearTimeout(hintTimer3);
+
+                let currentWord = words[currentIndex];
+                let shuffledWord = shuffleWord(currentWord);
+                document.getElementById('word-display').textContent = shuffledWord;
+                document.getElementById('user-input').value = '';
+
+                let hintDisplay = document.getElementById('hint-display');
+                hintDisplay.textContent = '';
+                startTime = new Date().getTime();
+                resetGameTimer();
+                enableInput();
+
+                hintTimer1 = setTimeout(() => {
+                    hintDisplay.textContent += ` İpucu: ${currentWord.charAt(0)}`;
+                }, 7000);
+
+                hintTimer2 = setTimeout(() => {
+                    hintDisplay.textContent += ` ${currentWord.charAt(1)}`;
+                }, 14000);
+
+                hintTimer3 = setTimeout(() => {
+                    hintDisplay.textContent += ` ${currentWord.charAt(2)}`;
+                }, 21000);
+            }
+
+            function resetGameTimer() {
+                clearTimeout(gameTimer);
+
+                gameTimer = setTimeout(() => {
+                    disableInput();
+                    document.getElementById('completion-message').textContent = 'Süre bitti';
+                    document.getElementById('correct-answer').textContent = `Doğru cevap: ${words[currentIndex]}`;
+
+                    if (currentStreak < 100) {
+                        setTimeout(() => {
+                            document.getElementById('completion-message').textContent = '';
+                            document.getElementById('correct-answer').textContent = '';
+                            currentIndex = (currentIndex + 1) % words.length;
+                            shuffleArray(words);
+                            currentStreak = 0;
+                            newRound();
+                        }, 3500);
+                    }
+                }, 30000);
+            }
+
+            function disableInput() {
+                inputEnabled = false;
+                document.getElementById('user-input').classList.add('hidden');
+            }
+
+            function enableInput() {
+                inputEnabled = true;
+                const userInput = document.getElementById('user-input');
+                userInput.classList.remove('hidden');
+                userInput.focus();
+            }
+
+            shuffleArray(words);
+            newRound();
+
+            function checkInput() {
+                if (!inputEnabled) return;
+
+                const userInput = document.getElementById('user-input').value.trim().toLocaleLowerCase('tr-TR');
+                if (userInput === words[currentIndex]) {
+                    const endTime = new Date().getTime();
+                    const timeTaken = (endTime - startTime) / 1000;
+
+                    document.getElementById('correct-message').textContent = 'Doğru Cevap!';
+                    document.getElementById('score-message').textContent = `Yazma hızı: ${timeTaken.toFixed(2)} seconds`;
+
+                    currentStreak++;
+                    document.getElementById('streak-record').textContent = `Seri: ${currentStreak} words`;
+
+                    if (timeTaken < bestTime) {
+                        bestTime = timeTaken;
+                        document.getElementById('best-time-message').textContent = `En iyi zaman: ${bestTime.toFixed(2)} seconds`;
+                    }
+
+                    if (currentStreak > bestStreak) {
+                        bestStreak = currentStreak;
+                        document.getElementById('streak-record').textContent = `Seri Rekoru: ${bestStreak} words`;
+
+                        if ([10, 20, 30, 40, 50, 60, 70, 80, 90].includes(bestStreak)) {
+                            document.getElementById('completion-message').textContent = `${bestStreak} seri skoru!`;
+                            setTimeout(() => {
+                                document.getElementById('completion-message').textContent = '';
+                            }, 7000);
+                        } else if (bestStreak === 100) {
+                            const compMsg = document.getElementById('completion-message');
+                            compMsg.textContent = '100 seriye ulaştın. Oyun bitti. Seri sıfırlandı. Hadi git çay, kahve iç :D';
+                            compMsg.style.color = 'red';
+                            compMsg.style.fontSize = 'calc(2.5 * var(--u))';
+                            setTimeout(() => {
+                                compMsg.textContent = '';
+                            }, 7000);
+                            disableInput();
+                            return;
+                        }
+                    }
+
+                    setTimeout(() => {
+                        document.getElementById('correct-message').textContent = '';
+                    }, 200);
+
+                    currentIndex = (currentIndex + 1) % words.length;
+                    newRound();
+                } else {
+                    document.getElementById('incorrect-message').textContent = 'Yanlış cevap!';
+                    setTimeout(() => {
+                        document.getElementById('incorrect-message').textContent = '';
+                        document.getElementById('user-input').value = '';
+                    }, 100);
+                }
+            }
+
+            function handleFormSubmit(event) {
+                event.preventDefault();
+                checkInput();
+                if (inputEnabled) {
+                    document.getElementById('user-input').focus();
+                }
+            }
+
+            document.getElementById('word-form').addEventListener('submit', handleFormSubmit);
+        }
+
+        window.onload = startGame;
+    </script>
+</body>
+
+</html>
