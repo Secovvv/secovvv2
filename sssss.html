@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .parasuflake {
+            position: absolute;
+            width: 5%;
+            height: 15%;
+            background: url('parasut.png') no-repeat center center/cover;
+            cursor: pointer;
+        }
+
+        #scoreboard {
+            position: fixed;
+            top: 10px;
+            left: 20px;
+            font-size: 30px;
+            color: lawngreen;
+        }
+
+        #Level2,
+        #Level3,
+        #gameOver {
+            display: none;
+            position: fixed;
+            top: 7%;
+            left: 5%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            color: lawngreen;
+        }
+    </style>
+</head>
+<body>
+
+<div id="scoreboard">Score: <span id="score">0</span></div>
+<div id="Level2">Level 2</div>
+<div id="Level3">Level 3</div>
+<div id="gameOver">Game Over</div>
+
+<script>
+    const numberOfParasuflakes = 3;
+    const parasuflakes = [];
+    let score = 0;
+    let gameActive = true;
+
+    function createParasuflake() {
+        const parasuflake = document.createElement('div');
+        parasuflake.className = 'parasuflake';
+        document.body.appendChild(parasuflake);
+
+        const startPositionX = Math.random() * (1200 - 0) + 0;
+        const startPositionY = -250;
+        parasuflake.style.left = startPositionX + 'px';
+        parasuflake.style.top = startPositionY + 'px';
+
+        const speedY = Math.random() * 0.8 + 0.8;
+        const speedX = (Math.random() - 0.5) * 2;
+
+        parasuflake.addEventListener('click', () => {
+            removeParasuflake(parasuflake);
+            playShootSound();
+            increaseScore();
+        });
+
+        parasuflakes.push({ element: parasuflake, speedX, speedY });
+    }
+
+    function createParasuflakeForLevel2() {
+        const parasuflake = document.createElement('div');
+        parasuflake.className = 'parasuflake';
+        document.body.appendChild(parasuflake);
+
+        const startPositionX = Math.random() * (1200 - 0) + 0;
+        const startPositionY = -300;
+        parasuflake.style.left = startPositionX + 'px';
+        parasuflake.style.top = startPositionY + 'px';
+
+        const speedY = Math.random() * 1 + 1;
+        const speedX = (Math.random() - 0.5) * 2;
+
+        parasuflake.addEventListener('click', () => {
+            removeParasuflake(parasuflake);
+            playShootSound();
+            increaseScore();
+        });
+
+        parasuflakes.push({ element: parasuflake, speedX, speedY });
+    }
+
+    function createNewParasuflakesLevel2() {
+        const numberOfNewParasuflakes = 6;
+
+        for (let i = 0; i < numberOfNewParasuflakes; i++) {
+            createParasuflakeForLevel2();
+        }
+    }
+
+    function createParasuflakeForLevel3() {
+        const parasuflake = document.createElement('div');
+        parasuflake.className = 'parasuflake';
+        document.body.appendChild(parasuflake);
+
+        const startPositionX = Math.random() * (1200 - 0) + 0;
+        const startPositionY = -400;
+        parasuflake.style.left = startPositionX + 'px';
+        parasuflake.style.top = startPositionY + 'px';
+
+        const speedY = Math.random() * 1.2 + 1.2;
+        const speedX = (Math.random() - 0.5) * 2;
+
+        parasuflake.addEventListener('click', () => {
+            removeParasuflake(parasuflake);
+            playShootSound();
+            increaseScore();
+        });
+
+        parasuflakes.push({ element: parasuflake, speedX, speedY });
+    }
+
+    function createNewParasuflakesLevel3() {
+        const numberOfNewParasuflakes = 9;
+
+        for (let i = 0; i < numberOfNewParasuflakes; i++) {
+            createParasuflakeWithIncreasedSpeed();
+        }
+    }
+
+    function createParasuflakeWithIncreasedSpeed() {
+        const parasuflake = document.createElement('div');
+        parasuflake.className = 'parasuflake';
+        document.body.appendChild(parasuflake);
+
+        const startPositionX = Math.random() * (1200 - 0) + 0;
+        const startPositionY = -500;
+        parasuflake.style.left = startPositionX + 'px';
+        parasuflake.style.top = startPositionY + 'px';
+
+        const speedY = Math.random() * 1.5 + 1.5;
+        const speedX = (Math.random() - 0.5) * 2;
+
+        parasuflake.addEventListener('click', () => {
+            removeParasuflake(parasuflake);
+            playShootSound();
+            increaseScore();
+        });
+
+        parasuflakes.push({ element: parasuflake, speedX, speedY });
+    }
+
+    function removeParasuflake(parasuflake) {
+        if (gameActive) {
+            parasuflake.style.display = 'none';
+            const index = parasuflakes.findIndex(p => p.element === parasuflake);
+            if (index !== -1) {
+                parasuflakes.splice(index, 1);
+            }
+        }
+    }
+
+    function playShootSound() {
+        const audio = new Audio('shoot.mp3');
+        audio.play();
+    }
+
+    function increaseScore() {
+        if (!gameActive) {
+            return;
+        }
+
+        score++;
+        document.getElementById('score').innerText = score;
+
+        if (score === 3) {
+            showLevel2Message();
+        } else if (score === 9) {
+            showLevel3Message();
+        } else if (score === 18) {
+            showAferinMessage();
+        }
+    }
+
+    function showLevel2Message() {
+        document.getElementById('Level2').style.display = 'block';
+        setTimeout(startGame, 2000);
+    }
+
+    function startGame() {
+        gameActive = true;
+        document.getElementById('Level2').style.display = 'none';
+        createNewParasuflakesLevel2();
+    }
+
+    function showLevel3Message() {
+        document.getElementById('Level3').style.display = 'block';
+        setTimeout(function () {
+            document.getElementById('Level3').style.display = 'none';
+            startLevel3();
+        }, 2000);
+    }
+
+    function startLevel3() {
+        gameActive = true;
+        document.getElementById('Level3').style.display = 'none';
+        createNewParasuflakesLevel3();
+    }
+
+    function showAferinMessage() {
+        const aferinMessage = document.createElement('div');
+        aferinMessage.textContent = 'TEBRİKLER';
+        aferinMessage.style.position = 'fixed';
+        aferinMessage.style.top = '8%';
+        aferinMessage.style.left = '7%';
+        aferinMessage.style.transform = 'translate(-50%, -50%)';
+        aferinMessage.style.fontSize = '35px';
+        aferinMessage.style.color = 'green';
+        document.body.appendChild(aferinMessage);
+    }
+
+    function updateParasuflakes() {
+        parasuflakes.forEach((parasuflake) => {
+            const { element, speedX, speedY } = parasuflake;
+            const currentTop = parseFloat(element.style.top);
+            const currentLeft = parseFloat(element.style.left);
+
+            if (currentTop > 800) {
+                showGameOverMessage();
+            } else if (currentTop > window.innerHeight) {
+                element.style.top = '0px';
+                element.style.left = `${Math.random() * (1200 - 0) + 0}px`;
+            } else {
+                element.style.top = `${currentTop + speedY}px`;
+                element.style.left = `${currentLeft + speedX}px`;
+            }
+        });
+
+        requestAnimationFrame(updateParasuflakes);
+    }
+
+    function showGameOverMessage() {
+        document.getElementById('gameOver').style.display = 'block';
+        stopGame();
+    }
+
+    function stopGame() {
+        gameActive = false;
+        parasuflakes.forEach((parasuflake) => {
+            removeParasuflake(parasuflake.element);
+        });
+        parasuflakes.length = 0;
+    }
+
+    for (let i = 0; i < numberOfParasuflakes; i++) {
+        createParasuflake();
+    }
+
+    updateParasuflakes();
+</script>
+
+</body>
+</html>
