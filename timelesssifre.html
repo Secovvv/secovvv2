@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeless - Password Protection</title>
+
+    <style>
+        :root {
+            --z: 1;
+            --u: calc(1vw * var(--z));
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: auto;
+            font-family: Arial, sans-serif;
+            background-color: bisque;
+            background-image: url('otherpage.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 1. ŞİFRE GİRİŞ EKRANI STİLLERİ */
+        #login-screen {
+            background-color: rgba(255, 255, 255, 0.92);
+            border: calc(0.15 * var(--u)) solid #333;
+            padding: calc(2.2 * var(--u));
+            border-radius: calc(0.8 * var(--u));
+            box-shadow: 0 calc(0.4 * var(--u)) calc(1.2 * var(--u)) rgba(0, 0, 0, 0.4);
+            text-align: center;
+            width: calc(26 * var(--u));
+            z-index: 10;
+        }
+
+        #login-screen label {
+            display: block;
+            margin-bottom: calc(0.8 * var(--u));
+            font-size: calc(1.3 * var(--u));
+            font-weight: bold;
+            color: #000;
+        }
+
+        #login-screen input {
+            width: 100%;
+            padding: calc(0.6 * var(--u));
+            margin-bottom: calc(1 * var(--u));
+            font-size: calc(1.1 * var(--u));
+            border: calc(0.12 * var(--u)) solid #555;
+            border-radius: calc(0.4 * var(--u));
+            text-align: center;
+        }
+
+        #login-screen button {
+            background-color: #4CAF50;
+            color: white;
+            padding: calc(0.7 * var(--u)) calc(1.5 * var(--u));
+            border: none;
+            border-radius: calc(0.4 * var(--u));
+            cursor: pointer;
+            font-size: calc(1.1 * var(--u));
+            font-weight: bold;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        #login-screen button:hover {
+            background-color: #388E3C;
+        }
+
+        #error-message {
+            color: red;
+            font-size: calc(1 * var(--u));
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: calc(0.8 * var(--u));
+            display: none;
+        }
+
+        /* 2. GİZLİ İÇERİK EKRANI STİLLERİ (Şifre Doğru Girilince Açılır) */
+        #protected-content {
+            display: none;
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Sol Üst Hoş Geldiniz ve Çıkış (Logout) Kutusu */
+        .session-bar {
+            position: fixed;
+            top: calc(1 * var(--u));
+            left: calc(1 * var(--u));
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: calc(0.6 * var(--u)) calc(1.2 * var(--u));
+            border-radius: calc(0.8 * var(--u));
+            border: calc(0.12 * var(--u)) solid #333;
+            font-size: calc(1 * var(--u));
+            color: #000;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: calc(1 * var(--u));
+            box-shadow: 0 calc(0.2 * var(--u)) calc(0.6 * var(--u)) rgba(0, 0, 0, 0.3);
+        }
+
+        .session-bar p {
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background-color: darkred;
+            color: #fff;
+            border: none;
+            padding: calc(0.35 * var(--u)) calc(0.8 * var(--u));
+            border-radius: calc(0.5 * var(--u));
+            font-size: calc(1 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: green;
+        }
+
+        /* Ana Kapsayıcı: Üst Butonlar - Slayt Kutusu - Alt Butonlar */
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: calc(1.2 * var(--u));
+            padding: calc(1.5 * var(--u));
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Müzik ve Kalp Buton Satırları */
+        .button-row {
+            display: flex;
+            gap: calc(1 * var(--u));
+            padding-left: calc(1.5 * var(--u));
+            flex-wrap: nowrap;
+        }
+
+        .action-btn {
+            background-color: darkred;
+            color: white;
+            padding: calc(0.6 * var(--u)) calc(1.3 * var(--u));
+            font-size: calc(1.05 * var(--u));
+            border: calc(0.1 * var(--u)) solid rgba(0, 0, 0, 0.4);
+            border-radius: calc(1.2 * var(--u));
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: green;
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Slayt Gösterisi Kutusu */
+        #image-container {
+            width: calc(45 * var(--u));
+            height: calc(35 * var(--u));
+            position: relative;
+            overflow: hidden;
+            background-color: transparent;
+            border-style: double;
+            border-color: goldenrod;
+            border-width: calc(1.1 * var(--u));
+            border-radius: 5%;
+            box-shadow: 0 calc(0.4 * var(--u)) calc(1.2 * var(--u)) rgba(0, 0, 0, 0.5);
+        }
+
+        #image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Sağ ve Sol Oklar */
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: calc(1.4 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #fff;
+            border: calc(0.08 * var(--u)) solid #000;
+            padding: calc(0.6 * var(--u)) calc(0.8 * var(--u));
+            color: #000;
+            text-align: center;
+            border-radius: calc(0.3 * var(--u));
+            user-select: none;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .arrow:hover {
+            background-color: #ddd;
+        }
+
+        #left-arrow {
+            left: calc(0.7 * var(--u));
+        }
+
+        #left-arrow:hover {
+            color: #ff0000;
+        }
+
+        #right-arrow {
+            right: calc(0.7 * var(--u));
+        }
+
+        #right-arrow:hover {
+            color: #00ff00;
+        }
+
+        /* Slayt Başlat/Durdur Butonu */
+        #slideshow-btn {
+            position: absolute;
+            bottom: calc(0.7 * var(--u));
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: calc(0.95 * var(--u));
+            padding: calc(0.5 * var(--u)) calc(1 * var(--u));
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: calc(0.3 * var(--u));
+            white-space: nowrap;
+            transition: background-color 0.3s;
+        }
+
+        #slideshow-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Kalp Yağmuru Efektleri */
+        .heartflake {
+            position: fixed;
+            width: calc(2.5 * var(--u));
+            height: calc(2.2 * var(--u));
+            background-image: url('heart2.png');
+            background-size: cover;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        body.scrollbar-active::-webkit-scrollbar {
+            display: none;
+            visibility: hidden;
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
+
+    <!-- 1. ŞİFRE SORMA EKRANI -->
+    <div id="login-screen">
+        <p id="error-message">Incorrect password. Please try again.</p>
+        <form id="login-form">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required autocomplete="off">
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <!-- 2. GİZLİ SLAYT EKRANI (Şifre Doğru Girilince Gösterilir) -->
+    <div id="protected-content">
+
+        <div class="session-bar">
+            <p>Welcome to the Timeless Sifre Page!</p>
+            <button class="logout-btn" onclick="logoutSession()">Logout</button>
+        </div>
+
+        <div class="page-wrapper">
+            <!-- Üst Müzik Butonları -->
+            <div class="button-row">
+                <input type="button" class="action-btn" value="Music Box" onclick="playRandomSound();">
+                <input type="button" class="action-btn" value="Stop Music" onclick="stopMusic();">
+                <span id="player"></span>
+            </div>
+
+            <!-- Orta Slayt Çerçevesi -->
+            <div id="image-container">
+                <img id="image" src="" alt="Image">
+                <div id="left-arrow" class="arrow">&lt;</div>
+                <div id="right-arrow" class="arrow">&gt;</div>
+                <button id="slideshow-btn">Stop Slideshow</button>
+            </div>
+
+            <!-- Alt Kalp Yağmuru Butonları -->
+            <div class="button-row">
+                <button id="startBtnheart" class="action-btn">Heart Start</button>
+                <button id="stopBtnheart" class="action-btn">Heart Finish</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. Hem Pencere Boyutu Hem Ctrl+Scroll Ölçekleme
+        var baseDPR = window.devicePixelRatio || 1;
+
+        function updateScale() {
+            var currentDPR = window.devicePixelRatio || 1;
+            var zoomFactor = currentDPR / baseDPR;
+            document.documentElement.style.setProperty('--z', zoomFactor);
+        }
+        updateScale();
+        window.addEventListener('resize', updateScale);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateScale);
+        }
+
+        // 2. Şifre Doğrulama ve Oturum Yönetimi
+        function checkAuth(pw) {
+            // Şifreyi açık metin olarak göstermemek için karakter kodlarıyla doğrulama
+            const target = [65, 115, 103, 116, 101, 55, 56, 48, 56, 46, 46, 46];
+            if (pw.length !== target.length) return false;
+            for (let i = 0; i < target.length; i++) {
+                if (pw.charCodeAt(i) !== target[i]) return false;
+            }
+            return true;
+        }
+
+        function unlockPage() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('protected-content').style.display = 'flex';
+            startSlideshow();
+        }
+
+        function logoutSession() {
+            sessionStorage.removeItem('timeless_auth');
+            stopMusic();
+            stopHeartfall();
+            stopSlideshow();
+            document.getElementById('protected-content').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('password').value = '';
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const pwInput = document.getElementById('password').value;
+            if (checkAuth(pwInput)) {
+                sessionStorage.setItem('timeless_auth', 'true');
+                unlockPage();
+            } else {
+                document.getElementById('error-message').style.display = 'block';
+                document.getElementById('password').value = '';
+            }
+        });
+
+        // 3. Slayt Gösterisi (Slideshow)
+        let currentIndex = 0;
+        let slideshowInterval = null;
+
+        const images = [
+            'te1.jpg', 'te2.jpg', 'te3.jpg', 'te4.jpg', 'te5.jpg', 'te6.jpg', 'te7.jpg', 'te8.jpg', 'te9.jpg', 'te10.jpg',
+            'te11.jpg', 'te12.jpg', 'te13.jpg', 'te14.jpg', 'te15.jpg', 'te16.jpg', 'te17.jpg', 'te18.jpg', 'te19.jpg', 'te20.jpg',
+            'te21.jpg', 'te22.jpg', 'te23.jpg', 'te24.jpg', 'te25.jpg', 'te26.jpg', 'te27.jpg', 'te28.jpg', 'te29.jpg', 'te30.jpg',
+            'te31.jpg', 'te32.jpg', 'te33.jpg', 'te34.jpg', 'te35.jpg', 'te36.jpg', 'te37.jpg', 'te38.jpg', 'te39.jpg', 'te40.jpg',
+            'te41.jpg', 'te42.jpg', 'te43.jpg', 'te44.jpg', 'te45.jpg', 'te46.jpg', 'te47.jpg', 'te48.jpg', 'te49.jpg', 'te50.jpg',
+            'te51.jpg', 'te52.jpg', 'te53.jpg', 'te54.jpg', 'te55.jpg', 'te56.jpg', 'te57.jpg', 'te58.jpg', 'te59.jpg', 'te60.jpg',
+            'te61.jpg', 'te62.jpg', 'te63.jpg', 'te64.jpg', 'te65.jpg', 'te66.jpg', 'te67.jpg', 'te68.jpg', 'te69.jpg', 'te70.jpg',
+            'te71.jpg', 'te72.jpg', 'te73.jpg', 'te74.jpg', 'te75.jpg', 'te76.jpg', 'te77.jpg', 'te78.jpg', 'te79.jpg', 'te80.jpg',
+            'te81.jpg', 'te82.jpg', 'te83.jpg', 'te84.jpg', 'te85.jpg', 'te86.jpg', 'te87.jpg', 'te88.jpg', 'te89.jpg', 'te90.jpg',
+            'te91.jpg', 'te92.jpg', 'te93.jpg', 'te94.jpg', 'te95.jpg', 'te96.jpg', 'te97.jpg', 'te98.jpg', 'te99.jpg', 'te100.jpg',
+            'te101.jpg', 'te102.jpg', 'te103.jpg', 'te104.jpg', 'te105.jpg', 'te106.jpg', 'te107.jpg', 'te108.jpg', 'te109.jpg', 'te110.jpg',
+            'te111.jpg', 'te112.jpg', 'te113.jpg', 'te114.jpg', 'te115.jpg', 'te117.jpg', 'te118.jpg', 'te119.jpg', 'te120.jpg',
+            'te121.jpg', 'te122.jpg', 'te123.jpg', 'te124.jpg', 'te125.jpg', 'te126.jpg', 'te127.jpg', 'te128.jpg', 'te129.jpg', 'te130.jpg',
+            'te131.jpg', 'te132.jpg', 'te133.jpg', 'te134.jpg', 'te135.jpg', 'te136.jpg', 'te137.jpg', 'te138.jpg', 'te139.jpg', 'te140.jpg',
+            'te141.jpg', 'te142.jpg', 'te143.jpg', 'te144.jpg', 'te145.jpg', 'te146.jpg', 'te147.jpg', 'te148.jpg', 'te149.jpg', 'te150.jpg',
+            'te151.jpg', 'te152.jpg', 'te153.jpg', 'te154.jpg', 'te155.jpg', 'te156.jpg', 'te157.jpg', 'te158.jpg', 'te159.jpg', 'te160.jpg',
+            'te161.jpg', 'te162.jpg', 'te163.jpg', 'te164.jpg', 'te165.jpg', 'te166.jpg', 'te167.jpg', 'te168.jpg', 'te169.jpg', 'te170.jpg',
+            'te171.jpg', 'te172.jpg', 'te173.jpg', 'te174.jpg', 'te175.jpg', 'te176.jpg', 'te177.jpg', 'te178.jpg', 'te179.jpg', 'te180.jpg',
+            'te181.jpg', 'te182.jpg', 'te183.jpg', 'te184.jpg', 'te185.jpg', 'te186.jpg', 'te187.jpg', 'te188.jpg', 'te189.jpg', 'te190.jpg',
+            'te191.jpg', 'te192.jpg', 'te193.jpg', 'te194.jpg', 'te195.jpg', 'te196.jpg', 'te197.jpg', 'te198.jpg', 'te199.jpg', 'te200.jpg',
+            'te201.jpg', 'te202.jpg', 'te203.jpg', 'te204.jpg', 'te205.jpg', 'te206.jpg', 'te207.jpg', 'te208.jpg', 'te209.jpg', 'te210.jpg',
+            'te211.jpg', 'te212.jpg', 'te213.jpg', 'te214.jpg', 'te215.jpg', 'te216.jpg', 'te217.jpg', 'te218.jpg', 'te219.jpg', 'te220.jpg',
+            'te221.jpg', 'te222.jpg', 'te223.jpg', 'te224.jpg', 'te225.jpg', 'te226.jpg', 'te227.jpg', 'te228.jpg', 'te229.jpg', 'te230.jpg',
+            'te231.jpg', 'te232.jpg', 'te233.jpg'
+        ];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function showImage(index) {
+            const image = document.getElementById('image');
+            if (index < 0) {
+                currentIndex = images.length - 1;
+            } else if (index >= images.length) {
+                currentIndex = 0;
+            } else {
+                currentIndex = index;
+            }
+            image.src = images[currentIndex];
+        }
+
+        function startSlideshow() {
+            stopSlideshow();
+            shuffleArray(images);
+            showImage(0);
+            slideshowInterval = setInterval(() => {
+                showImage(currentIndex + 1);
+            }, 5000);
+        }
+
+        function stopSlideshow() {
+            clearInterval(slideshowInterval);
+            slideshowInterval = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const leftArrow = document.getElementById('left-arrow');
+            const rightArrow = document.getElementById('right-arrow');
+            const slideshowBtn = document.getElementById('slideshow-btn');
+
+            leftArrow.addEventListener('click', () => {
+                showImage(currentIndex - 1);
+            });
+
+            rightArrow.addEventListener('click', () => {
+                showImage(currentIndex + 1);
+            });
+
+            slideshowBtn.addEventListener('click', () => {
+                if (slideshowInterval) {
+                    stopSlideshow();
+                    slideshowBtn.textContent = 'Start Slideshow';
+                } else {
+                    startSlideshow();
+                    slideshowBtn.textContent = 'Stop Slideshow';
+                }
+            });
+
+            if (sessionStorage.getItem('timeless_auth') === 'true') {
+                unlockPage();
+            }
+        });
+
+        // 4. Müzik Kutusu
+        var audioElement;
+
+        function playRandomSound() {
+            stopMusic();
+            var sounds = [
+                "darkness.mp3",
+                "akon.mp3",
+                "Glass Animals.mp3",
+                "chain.mp3",
+                "ozone.mp3",
+                "maroon.mp3",
+                "reason.mp3",
+                "waving Flag.mp3",
+                "Let Me Down Slowly.mp3",
+                "forever.mp3",
+                "Benikendindenkurtar.mp3",
+                "Nothingelsematter.mp3",
+                "senidertetmeler.mp3",
+                "instasamka.mp3"
+            ];
+            var soundFile = sounds[Math.floor(Math.random() * sounds.length)];
+            audioElement = new Audio(soundFile);
+            audioElement.loop = true;
+            audioElement.play();
+        }
+
+        function stopMusic() {
+            if (audioElement && !audioElement.paused) {
+                audioElement.pause();
+            }
+        }
+
+        // 5. Kalp Yağmuru
+        document.getElementById('startBtnheart').addEventListener('click', startHeartfall);
+        document.getElementById('stopBtnheart').addEventListener('click', stopHeartfall);
+
+        let heartInterval;
+
+        function startHeartfall() {
+            document.body.classList.add('scrollbar-active');
+            clearInterval(heartInterval);
+            heartInterval = setInterval(createHeartflake, 1000);
+        }
+
+        function stopHeartfall() {
+            document.body.classList.remove('scrollbar-active');
+            clearInterval(heartInterval);
+        }
+
+        function createHeartflake() {
+            const heartflake = document.createElement('div');
+            heartflake.className = 'heartflake';
+            document.body.appendChild(heartflake);
+
+            const startPositionX = Math.random() * Math.max(100, window.innerWidth - 60) + 10;
+            heartflake.style.left = startPositionX + 'px';
+            heartflake.style.top = '-40px';
+
+            let speedY = 2;
+            let speedX = Math.random() < 0.5 ? -1 : 1;
+
+            const moveId = setInterval(() => {
+                const currentTop = parseFloat(heartflake.style.top);
+                const currentLeft = parseFloat(heartflake.style.left);
+
+                heartflake.style.top = (currentTop + speedY) + 'px';
+                heartflake.style.left = (currentLeft + speedX) + 'px';
+
+                if (currentTop > window.innerHeight || currentLeft > window.innerWidth || currentLeft < 0) {
+                    clearInterval(moveId);
+                    heartflake.remove();
+                }
+            }, 15);
+        }
+    </script>
+</body>
+</html>
