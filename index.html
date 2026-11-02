@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="600">
+    <title>Secovvv</title>
+    <link rel="stylesheet" href="alev.css">
+
+    <style>
+        :root {
+            --z: 1;
+            --u: calc(1vw * var(--z));
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: auto;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(360deg, white, black);
+            background-attachment: fixed;
+            background-position: 52.5% -131%;
+        }
+
+        /* Çözünürlük ve Skor Sabit Kutuları */
+        #resolution-container {
+            position: fixed;
+            top: calc(0.8 * var(--u));
+            right: calc(0.8 * var(--u));
+            padding: calc(0.5 * var(--u)) calc(1 * var(--u));
+            background-color: rgba(255, 255, 255, 0.75);
+            color: black;
+            font-size: calc(1.3 * var(--u));
+            border-radius: calc(0.6 * var(--u));
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #scoreboard {
+            position: fixed;
+            top: calc(0.8 * var(--u));
+            left: calc(1.2 * var(--u));
+            font-size: calc(2 * var(--u));
+            color: lawngreen;
+            text-shadow: calc(0.1 * var(--u)) calc(0.1 * var(--u)) calc(0.2 * var(--u)) black;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #Level2, #Level3, #gameOver {
+            display: none;
+            position: fixed;
+            top: calc(3.8 * var(--u));
+            left: calc(1.2 * var(--u));
+            font-size: calc(2 * var(--u));
+            color: lawngreen;
+            text-shadow: calc(0.1 * var(--u)) calc(0.1 * var(--u)) calc(0.3 * var(--u)) black;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        /* Ana Sayfa Akış Kapsayıcısı */
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: calc(98 * var(--u));
+            margin: 0 auto;
+            padding: calc(0.5 * var(--u)) calc(1.5 * var(--u));
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Üst Saat ve Gramer Bölümü */
+        .top-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: calc(0.2 * var(--u));
+            margin-bottom: 0;
+            gap: calc(0.2 * var(--u));
+        }
+
+        .gramer-btn {
+            cursor: pointer;
+            background-color: navajowhite;
+            border: calc(0.15 * var(--u)) solid #333;
+            border-radius: calc(0.4 * var(--u));
+            padding: calc(0.3 * var(--u)) calc(1 * var(--u));
+            font-weight: bold;
+            font-size: calc(1.1 * var(--u));
+            transition: transform 0.2s;
+        }
+
+        .gramer-btn:hover {
+            transform: scale(1.05);
+        }
+
+        #clock, #date {
+            color: lawngreen;
+            font-size: calc(1.8 * var(--u));
+            font-family: cursive;
+            font-style: italic;
+            -webkit-text-stroke: calc(0.06 * var(--u)) green;
+            text-align: center;
+            line-height: 1.1;
+            margin: 0;
+        }
+
+        #specialEvents {
+            color: red;
+            font-size: calc(2.2 * var(--u));
+            text-align: center;
+            font-family: cursive;
+            font-style: italic;
+            margin: calc(0.2 * var(--u)) 0 0 0;
+            line-height: 1.1;
+            text-shadow: calc(0.1 * var(--u)) calc(0.1 * var(--u)) calc(0.15 * var(--u)) black;
+        }
+
+        #specialEvents:empty {
+            display: none;
+        }
+
+        /* Kayan Beyaz Kedi Şeridi */
+        .cat-marquee {
+            cursor: pointer;
+            width: 100%;
+            margin: calc(-0.3 * var(--u)) 0 calc(-0.6 * var(--u)) 0;
+            padding: 0;
+            line-height: 0;
+            display: block;
+        }
+
+        .cat-marquee img {
+            height: calc(5 * var(--u));
+            width: auto;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Üst Kontrol Paneli */
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            width: 100%;
+            gap: calc(1 * var(--u));
+            margin: 0 0 calc(1 * var(--u)) 0;
+        }
+
+        .left-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: calc(1.2 * var(--u));
+            flex-wrap: nowrap;
+        }
+
+        .right-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: calc(1.2 * var(--u));
+            flex-wrap: nowrap;
+        }
+
+        /* İpek ve Seco Yuvarlak Çerçeveler */
+        .avatar-circle {
+            width: calc(7.5 * var(--u));
+            height: calc(7.5 * var(--u));
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            object-position: center;
+            border: calc(0.35 * var(--u)) solid black;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: border-color 0.3s, transform 0.3s;
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .avatar-circle:hover {
+            border-color: #B71C1C;
+            transform: scale(1.05);
+        }
+
+        .music-and-color {
+            display: flex;
+            flex-direction: column;
+            gap: calc(0.6 * var(--u));
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .music-btns {
+            display: flex;
+            gap: calc(0.6 * var(--u));
+            flex-wrap: nowrap;
+        }
+
+        .music-btn {
+            background-color: darkred;
+            border: calc(0.1 * var(--u)) solid #fff;
+            border-radius: calc(0.8 * var(--u));
+            cursor: pointer;
+            color: white;
+            padding: calc(0.4 * var(--u)) calc(0.9 * var(--u));
+            font-size: calc(1 * var(--u));
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .music-btn:hover {
+            background-color: green;
+        }
+
+        .color-palette {
+            width: calc(11 * var(--u));
+            height: calc(2.2 * var(--u));
+            border: calc(0.2 * var(--u)) solid darkgoldenrod;
+            background-color: firebrick;
+            border-radius: calc(2 * var(--u));
+            padding: calc(0.15 * var(--u));
+        }
+
+        .color-palette td {
+            border-radius: 50%;
+            cursor: pointer;
+            width: 20%;
+        }
+
+        /* SECOVVV Başlığı */
+        #hoverMarquee {
+            width: calc(28 * var(--u));
+            -webkit-text-stroke: calc(0.15 * var(--u)) white;
+            font-size: calc(5.5 * var(--u));
+            line-height: 1;
+            margin: 0;
+            padding: 0;
+            font-family: serif;
+            text-align: center;
+            font-weight: bolder;
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        #hoverMarquee:hover {
+            color: transparent;
+        }
+
+        /* Sosyal Medya ve İndirme İkonları */
+        .social-icons {
+            display: flex;
+            gap: calc(0.9 * var(--u));
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+
+        .social-icons a img {
+            width: calc(3.2 * var(--u));
+            height: calc(3.2 * var(--u));
+            object-fit: cover;
+            border-radius: calc(0.7 * var(--u));
+            transition: transform 0.3s;
+            display: block;
+        }
+
+        .social-icons a:hover img {
+            transform: scale(1.15);
+        }
+
+        /* 10 Kedi Kartları */
+        .cats-row {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: calc(1.2 * var(--u));
+            width: 100%;
+            margin: calc(0.5 * var(--u)) 0 calc(1 * var(--u)) 0;
+        }
+
+        .cat-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: calc(8 * var(--u));
+            gap: calc(0.5 * var(--u));
+            flex-shrink: 0;
+        }
+
+        .cat-card a {
+            display: block;
+            width: 100%;
+        }
+
+        .enlarge-on-hover {
+            width: calc(8 * var(--u));
+            height: calc(8 * var(--u));
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.3s, border-color 0.3s;
+            border: calc(0.4 * var(--u)) solid black;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .enlarge-on-hover:hover {
+            transform: scale(1.1);
+            border-color: #B71C1C;
+        }
+
+        .cat-name-marquee {
+            width: 100%;
+            height: calc(2 * var(--u));
+            line-height: calc(2 * var(--u));
+            font-size: calc(1.1 * var(--u));
+            font-family: sans-serif;
+            font-style: italic;
+            background-color: black;
+            color: navajowhite;
+            text-align: center;
+            border-radius: calc(0.3 * var(--u));
+            overflow: hidden;
+        }
+
+        /* Murphy Kanunları */
+        .murphy-box {
+            font-size: calc(1.9 * var(--u));
+            font-family: sans-serif;
+            color: blueviolet;
+            text-align: center;
+            -webkit-text-stroke: calc(0.06 * var(--u)) black;
+            margin: calc(0.6 * var(--u)) 0;
+            min-height: calc(3 * var(--u));
+            padding: 0 calc(1 * var(--u));
+        }
+
+        .murphy-box p {
+            margin: calc(0.3 * var(--u)) 0;
+        }
+
+        /* 3'lü Vitrin: Mustafa.gif - Sabit Slider - Oyun.gif */
+        .showcase-row {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            align-items: center;
+            justify-items: center;
+            gap: calc(2 * var(--u));
+            width: 100%;
+            margin: calc(0.8 * var(--u)) 0 calc(2.5 * var(--u)) 0;
+        }
+
+        .side-gif {
+            width: calc(21 * var(--u));
+            height: calc(34 * var(--u));
+            object-fit: cover;
+            border: calc(0.5 * var(--u)) solid seagreen;
+            border-radius: 20%;
+        }
+
+        #slider {
+            position: relative;
+            width: calc(32 * var(--u));
+            height: calc(36 * var(--u));
+            overflow: hidden;
+            border-radius: 15%;
+            border-color: royalblue greenyellow purple orangered;
+            border-style: ridge;
+            border-width: calc(1.4 * var(--u));
+            cursor: default;
+            background-color: #111;
+            z-index: 10;
+        }
+
+        .slider-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            pointer-events: none;
+        }
+
+        #imageContainer {
+            text-align: center;
+            margin: calc(0.5 * var(--u)) 0;
+        }
+
+        #imageContainer:empty {
+            display: none;
+        }
+
+        #imageContainer img {
+            width: calc(35 * var(--u));
+            height: auto;
+            border-radius: calc(1 * var(--u));
+        }
+
+        /* Gençliğe Hitabe ve İstiklal Marşı Kutuları */
+        .national-text-box {
+            width: 100%;
+            height: calc(32 * var(--u));
+            overflow-y: auto;
+            font-size: calc(1.6 * var(--u));
+            line-height: 1.6;
+            background-color: black;
+            font-family: sans-serif;
+            color: antiquewhite;
+            text-align: center;
+            padding: calc(2.5 * var(--u));
+            margin: calc(1.5 * var(--u)) 0;
+            border-radius: calc(1.2 * var(--u));
+            box-shadow: 0 calc(0.3 * var(--u)) calc(1 * var(--u)) rgba(0,0,0,0.6);
+        }
+
+        .national-text-box h2 {
+            margin-top: 0;
+            font-size: calc(2.2 * var(--u));
+            color: #ffd700;
+        }
+
+        /* Klavye Kedi ve İletişim Formu */
+        .contact-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin: calc(2 * var(--u)) 0;
+        }
+
+        #klavyeKedi {
+            width: calc(13 * var(--u));
+            height: auto;
+            cursor: pointer;
+            margin-bottom: calc(-1 * var(--u));
+            z-index: 5;
+            border-radius: calc(0.8 * var(--u));
+        }
+
+        .contact-form-container {
+            background-color: #fff;
+            box-shadow: 0 0 calc(1.5 * var(--u)) red;
+            border-radius: calc(3 * var(--u));
+            width: calc(44 * var(--u));
+            padding: calc(3.5 * var(--u));
+        }
+
+        .contact-form h2 {
+            color: red;
+            text-align: center;
+            text-decoration: underline;
+            margin-top: 0;
+            font-size: calc(2 * var(--u));
+        }
+
+        .contact-form label {
+            display: block;
+            margin-bottom: calc(0.5 * var(--u));
+            color: black;
+            font-size: calc(1.4 * var(--u));
+            font-weight: bold;
+        }
+
+        .contact-form select,
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: calc(0.7 * var(--u)) calc(1 * var(--u));
+            margin-bottom: calc(1.2 * var(--u));
+            border: calc(0.25 * var(--u)) solid black;
+            border-radius: calc(2 * var(--u));
+            font-size: calc(1.2 * var(--u));
+            text-align: center;
+        }
+
+        .contact-form button {
+            background-color: darkred;
+            color: #fff;
+            padding: calc(0.8 * var(--u));
+            border: none;
+            border-radius: calc(3 * var(--u));
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s ease;
+            font-size: calc(1.6 * var(--u));
+            margin-top: calc(0.6 * var(--u));
+            font-weight: bold;
+        }
+
+        .contact-form button:hover {
+            background-color: green;
+        }
+
+        /* Footer */
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: calc(2 * var(--u)) calc(1 * var(--u));
+            margin-top: calc(1.5 * var(--u));
+        }
+
+        footer p {
+            margin: 0;
+            font-size: calc(1.8 * var(--u));
+            color: black;
+            text-shadow: 0 0 calc(0.8 * var(--u)) lawngreen;
+            font-weight: bold;
+        }
+
+        /* Kar, Kalp, Bayrak, Paraşüt Butonları ve Efektleri */
+        .effect-btn {
+            border: calc(0.3 * var(--u)) solid black;
+            background-color: rgba(255, 255, 255, 0.7);
+            color: black;
+            padding: calc(0.6 * var(--u)) calc(1.2 * var(--u));
+            font-size: calc(1.3 * var(--u));
+            cursor: pointer;
+            opacity: 0;
+            position: fixed;
+            top: -500px;
+            border-radius: calc(3 * var(--u));
+            z-index: 999;
+            transition: opacity 0.3s;
+        }
+
+        .snowflake, .heartflake, .bursaflake, .parasutflake {
+            position: fixed;
+            background-size: cover;
+            pointer-events: none;
+            z-index: 998;
+        }
+        .snowflake { width: calc(2.2 * var(--u)); height: calc(2.2 * var(--u)); background-image: url('snow2.png'); }
+        .heartflake { width: calc(2.8 * var(--u)); height: calc(2.5 * var(--u)); background-image: url('heart2.png'); }
+        .bursaflake { width: calc(7 * var(--u)); height: calc(4.2 * var(--u)); background-image: url('tcbayrak.gif'); border-radius: 25%; }
+        .parasutflake { width: calc(5.5 * var(--u)); height: calc(6.8 * var(--u)); background-image: url('parasut2.png'); }
+
+        .parasuflake {
+            position: fixed;
+            width: calc(9 * var(--u));
+            height: calc(12 * var(--u));
+            background: url('parasut.png') no-repeat center center/cover;
+            cursor: pointer;
+            z-index: 999;
+        }
+
+        body.scrollbar-active::-webkit-scrollbar {
+            display: none;
+            visibility: hidden;
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
+
+    <div id="canvasContainer">
+        <canvas id="heartCanvas"></canvas>
+        <script src="alev.js"></script>
+    </div>
+
+    <!-- Çözünürlük ve Oyun Skoru -->
+    <div id="resolution-container"></div>
+    <div id="scoreboard">Score: <span id="score">0</span></div>
+    <div id="Level2">Level 2</div>
+    <div id="Level3">Level 3</div>
+    <div id="gameOver">Game Over</div>
+
+    <!-- Efekt Butonları -->
+    <button id="startBtnsnow" class="effect-btn">SnowS</button>
+    <button id="stopBtnsnow" class="effect-btn">SnowE</button>
+    <button id="startBtnheart" class="effect-btn">HeartS</button>
+    <button id="stopBtnheart" class="effect-btn">HeartE</button>
+    <button id="startBtnbursa" class="effect-btn">BursaS</button>
+    <button id="stopBtnbursa" class="effect-btn">BursaE</button>
+    <button id="startBtnparasut" class="effect-btn">ParasutS</button>
+    <button id="stopBtnparasut" class="effect-btn">ParasutE</button>
+
+    <div class="page-wrapper">
+
+        <!-- Üst Saat, Tarih ve Gramer Butonu -->
+        <div class="top-bar">
+            <a href="gramer2.html" target="_blank">
+                <input type="button" class="gramer-btn" value="GRAMER">
+            </a>
+            <div id="clock"></div>
+            <div id="date"></div>
+            <div id="specialEvents"></div>
+        </div>
+
+        <!-- Kayan Kedi GIF -->
+        <marquee behavior="scroll" scrollamount="20" class="cat-marquee" onmouseover="stopMarquee()" onmouseout="startMarquee()">
+            <a href="kelimeoyun.html" target="_blank">
+                <img src="beyazkedi.gif" alt="GIF" id="gifImage" onclick="playAudio('catmiyav.mp3')">
+            </a>
+        </marquee>
+
+        <!-- Üst Kontrol Paneli -->
+        <div class="control-grid">
+            <!-- Sol Taraf: İpek, Müzik ve Arka Plan Renkleri -->
+            <div class="left-controls">
+                <img src="ipekkucuk.jpg" onclick="myFunctionss()" class="avatar-circle" alt="İpek">
+                <div class="music-and-color">
+                    <div class="music-btns">
+                        <input type="button" class="music-btn" value="Music Box" onclick="playRandomSound();">
+                        <input type="button" class="music-btn" value="Stop Music" onclick="stopMusic();">
+                    </div>
+                    <span id="player"></span>
+                    <table class="color-palette">
+                        <tr>
+                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:Khaki;"></td>
+                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:darkgoldenrod;"></td>
+                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:black;"></td>
+                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:skyblue;"></td>
+                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:antiquewhite;"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Orta: SECOVVV Başlık -->
+            <marquee behavior="slide" scrollamount="7" direction="down" id="hoverMarquee">
+                SECOVVV
+            </marquee>
+
+            <!-- Sağ Taraf: Sosyal İkonlar ve Seco -->
+            <div class="right-controls">
+                <div class="social-icons">
+                    <a href="https://www.instagram.com/secovvvsecond/" target="_blank" class="instagram-button">
+                        <img src="instagram.png" alt="Instagram Butonu">
+                    </a>
+                    <a href="https://www.youtube.com/channel/UCEWv2IlGKRkzlU6qlrQrrxg" target="_blank" class="youtube-button">
+                        <img src="youtube.png" alt="YouTube Butonu">
+                    </a>
+                    <a href="https://www.mediafire.com/file/mvokqes8969m9f5/gameover87.exe/file" download target="_blank" class="download-button">
+                        <img src="oyunresim11.jpg" alt="Oyun Resmi">
+                    </a>
+                </div>
+               <a href="timelesssifre.html" target="_blank">
+    <img src="secokucuk.jpg" class="avatar-circle" alt="Seco">
+</a>
+            </div>
+        </div>
+
+        <!-- 10 Kedi ve Altlarındaki Kayan İsimler -->
+        <div class="cats-row">
+            <div class="cat-card">
+                <a href="leosayfa.html" target="_blank"><img src="Leokucuk.jpg" class="enlarge-on-hover" alt="Leo"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">LEO</marquee>
+            </div>
+            <div class="cat-card">
+                <a href="sirinsayfa.html" target="_blank"><img src="sirinkucuk.jpg" class="enlarge-on-hover" alt="Şirin"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">ŞİRİN</marquee>
+            </div>
+            <div class="cat-card">
+                <a href="salemsayfa.html" target="_blank"><img src="salemkucuk.jpg" class="enlarge-on-hover" alt="Salem"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">SALEM</marquee>
+            </div>
+            <div class="cat-card">
+                <a href="samursayfa.html" target="_blank"><img src="samurkucuk.jpg" class="enlarge-on-hover" alt="Samur"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">SAMUR</marquee>
+            </div>
+            <div class="cat-card">
+                <a href="zekosayfa.html" target="_blank"><img src="zekokucuk.jpg" class="enlarge-on-hover" alt="Zeko"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">ZEKO</marquee>
+            </div>
+            <div class="cat-card">
+                <a href="elmassayfa.html" target="_blank"><img src="elmaskucuk.jpg" class="enlarge-on-hover" alt="Elmas"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">ELMAS</marquee>
+            </div>
+            <div class="cat-card">
+                <a href="lunasayfa.html" target="_blank"><img src="beyazkucuk.jpg" class="enlarge-on-hover" alt="Luna"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">LUNA</marquee>
+            </div>
+            <div class="cat-card">
+                <a href="lenasayfa.html" target="_blank"><img src="lenakucuk.jpg" class="enlarge-on-hover" alt="Lena"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">LENA</marquee>
+            </div>
+            <div class="cat-card">
+                <a href="mollysayfa.html" target="_blank"><img src="sidiklikucuk.jpg" class="enlarge-on-hover" alt="Molly"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">MOLLY</marquee>
+            </div>
+            <div class="cat-card">
+                <a href="tatlisayfa.html" target="_blank"><img src="tatlikucuk.jpg" class="enlarge-on-hover" alt="Tatlı"></a>
+                <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">TATLI</marquee>
+            </div>
+        </div>
+
+        <!-- Murphy Kanunları -->
+        <div class="murphy-box">
+            <div id="murphyText"><p>"MURPHY KANUNLARI"</p></div>
+        </div>
+
+        <!-- Özel Gün Görseli -->
+        <div id="imageContainer"></div>
+
+        <!-- Orta 3'lü Vitrin: Ata GIF - Sabit Slider - Oyun GIF -->
+        <div class="showcase-row">
+            <img src="mustafa.gif" class="side-gif" alt="Mustafa Kemal Atatürk">
+            <div id="slider"></div>
+            <img id="oyungif" src="oyun.gif" class="side-gif" alt="Oyun GIF">
+        </div>
+
+        <!-- Gençliğe Hitabe -->
+        <div class="national-text-box">
+            <h2>GENÇLİĞE HİTABE</h2>
+            <p>Ey Türk gençliği! Birinci vazifen; Türk istiklalini, Türk cumhuriyetini, ilelebet muhafaza ve müdafaa etmektir.</p>
+            <p>Mevcudiyetinin ve istikbalinin yegâne temeli budur. Bu temel, senin en kıymetli hazinendir. İstikbalde dahi seni bu hazineden mahrum etmek isteyecek dâhilî ve haricî bedhahların olacaktır. Bir gün, istiklal ve cumhuriyeti müdafaa mecburiyetine düşersen, vazifeye atılmak için içinde bulunacağın vaziyetin imkân ve şeraitini düşünmeyeceksin. Bu imkân ve şerait, çok namüsait bir mahiyette tezahür edebilir. İstiklal ve cumhuriyetine kastedecek düşmanlar, bütün dünyada emsali görülmemiş bir galibiyetin mümessili olabilirler. Cebren ve hile ile aziz vatanın bütün kaleleri zapt edilmiş, bütün tersanelerine girilmiş, bütün orduları dağıtılmış ve memleketin her köşesi bilfiil işgal edilmiş olabilir. Bütün bu şeraitten daha elim ve daha vahim olmak üzere, memleketin dâhilinde iktidara sahip olanlar, gaflet ve dalalet ve hatta hıyanet içinde bulunabilirler. Hatta bu iktidar sahipleri, şahsi menfaatlerini müstevlilerin siyasi emelleriyle tevhit edebilirler. Millet, fakruzaruret içinde harap ve bitap düşmüş olabilir.</p>
+            <p>Ey Türk istikbalinin evladı! İşte, bu ahval ve şerait içinde dahi vazifen, Türk istiklal ve cumhuriyetini kurtarmaktır. Muhtaç olduğun kudret, damarlarındaki asil kanda mevcuttur.</p>
+            <p><strong>Mustafa Kemal Atatürk</strong></p>
+        </div>
+
+        <!-- İstiklal Marşı -->
+        <div class="national-text-box">
+            <h2>İSTİKLAL MARŞI</h2>
+            <p>Korkma! Sönmez bu şafaklarda yüzen al sancak,<br>Sönmeden yurdumun üstünde tüten en son ocak.<br>O benim milletimin yıldızıdır, parlayacak;<br>O benimdir, o benim milletimindir ancak.</p>
+            <p>Çatma, kurban olayım, çehreni ey nazlı hilal!<br>Kahraman ırkıma bir gül; ne bu şiddet, bu celal?<br>Sana olmaz dökülen kanlarımız sonra helal...<br>Hakkıdır, Hakk'a tapan milletimin istiklâl.</p>
+            <p>Ben ezelden beridir hür yaşadım, hür yaşarım,<br>Hangi çılgın bana zincir vuracakmış? Şaşarım.<br>Kükremiş sel gibiyim, bendimi çiğner, aşarım,<br>Yırtarım dağları, enginlere sığmam, taşarım.</p>
+            <p>Garbın afakını sarmışsa çelik zırhlı duvar,<br>Benim iman dolu göğsüm gibi serhaddim var.<br>Ulusun, korkma! Nasıl böyle bir imanı boğar,<br>“Medeniyet” dediğin tek dişi kalmış canavar.</p>
+            <p>Arkadaş! Yurduma alçakları uğratma sakın,<br>Siper et gövdeni, dursun bu hayâsızca akın.<br>Doğacaktır sana vadettiği günler Hakk'ın,<br>Kim bilir, belki yarın belki yarından da yakın.</p>
+            <p>Bastığın yerleri “toprak” diyerek geçme, tanı,<br>Düşün altındaki binlerce kefensiz yatanı.<br>Sen şehit oğlusun, incitme, yazıktır atanı,<br>Verme, dünyaları alsan da bu cennet vatanı.</p>
+            <p>Kim bu cennet vatanın uğruna olmaz ki feda?<br>Şüheda fışkıracak, toprağı sıksan şüheda.<br>Canı, cananı, bütün varımı alsın da Hüda,<br>Etmesin tek vatanımdan beni dünyada cüda.</p>
+            <p>Ruhumun senden İlahî, şudur ancak emeli:<br>Değmesin mabedimin göğsüne namahrem eli.<br>Bu ezanlar, ki şehadetleri dinin temeli,<br>Ebedî, yurdumun üstünde benim inlemeli.</p>
+            <p>O zaman vecd ile bin secde eder, varsa taşım,<br>Her cerihamdan, İlahî, boşanıp kanlı yaşım,<br>Fışkırır ruhumücerret gibi yerden naaşım,<br>O zaman yükselerek arşa değer belki başım.</p>
+            <p>Dalgalan sen de şafaklar gibi ey şanlı hilal!<br>Olsun artık dökülen kanlarımın hepsi helal.<br>Ebediyen sana yok, ırkıma yok izmihlal.<br>Hakkıdır, hür yaşamış bayrağımın hürriyet;<br>Hakkıdır, Hakk'a tapan milletimin istiklâl.</p>
+        </div>
+
+        <!-- Klavye Kedi ve İletişim Formu -->
+        <div class="contact-section">
+            <img id="klavyeKedi" src="klavyekedi.gif" alt="klavyekedi.gif">
+            <div class="contact-form-container">
+                <div class="contact-form">
+                    <h2>İletişim Formu</h2>
+                    <form action="https://formsubmit.co/secovvv@gmail.com" method="POST" onsubmit="return validateForm()">
+                        <input type="hidden" name="_captcha" value="false">
+
+                        <label for="name">Adınız:</label>
+                        <input type="text" id="name" name="name" required>
+
+                        <label for="email">E-posta Adresiniz:</label>
+                        <input type="email" id="email" name="email" required>
+
+                        <label for="continent">Region:</label>
+                        <select id="continent" name="continent" required>
+                            <option value="" disabled selected>Select Region</option>
+                            <option value="Europe">Europe</option>
+                            <option value="Asia">Asia</option>
+                            <option value="Africa">Africa</option>
+                            <option value="Antartica">Antartica</option>
+                            <option value="Australia">Australia</option>
+                            <option value="North America">North America</option>
+                            <option value="South America">South America</option>
+                        </select>
+
+                        <label for="message">Mesajınız:</label>
+                        <textarea id="message" name="message" rows="4" required></textarea>
+                        <button type="submit">Gönder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2023 All rights reserved. | Designed by Secovvv</p>
+        </footer>
+
+    </div>
+
+    <!-- TÜM JAVASCRIPT FONKSİYONLARI -->
+    <script>
+        // 1. Çözünürlük ve Hem Pencere Hem Ctrl+Scroll Ölçekleme
+        var baseDPR = window.devicePixelRatio || 1;
+
+        function updateResolution() {
+            var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+            var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+            var currentDPR = window.devicePixelRatio || 1;
+            var zoomFactor = currentDPR / baseDPR;
+
+            document.documentElement.style.setProperty('--z', zoomFactor);
+            document.getElementById('resolution-container').textContent = 'Resolution: ' + width + 'x' + height;
+        }
+        updateResolution();
+        window.addEventListener('resize', updateResolution);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateResolution);
+        }
+
+        // 2. Saat, Tarih ve Özel Günler
+        function updateClock() {
+            var now = navigator.onLine ? new Date() : new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            var hours = now.getHours();
+            var minutes = now.getMinutes();
+            var seconds = now.getSeconds();
+            var day = now.getDate();
+            var month = now.getMonth() + 1;
+            var year = now.getFullYear();
+
+            var clockElement = document.getElementById("clock");
+            var dateElement = document.getElementById("date");
+            var specialEventsElement = document.getElementById("specialEvents");
+            var imageContainer = document.getElementById("imageContainer");
+
+            var timeString = hours.toString().padStart(2, '0') + ":" + minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0');
+            clockElement.innerHTML = timeString;
+            dateElement.innerHTML = day + "/" + month + "/" + year;
+
+            specialEventsElement.innerHTML = "";
+            if (month === 7 && day === 9) specialEventsElement.innerHTML += "MUTLU YILLAR SEÇKİN<br>";
+            if (month === 11 && day === 26) specialEventsElement.innerHTML += "MUTLU YILLAR İPEK<br>";
+            if (month === 10 && day === 13) specialEventsElement.innerHTML += "MUTLU YILLAR EMEL<br>";
+            if (month === 12 && day === 10) specialEventsElement.innerHTML += "MUTLU YILLAR SADETTİN<br>";
+            if (month === 3 && day === 5) specialEventsElement.innerHTML += "MUTLU YILLAR OSMAN<br>";
+            if (month === 7 && day === 14) specialEventsElement.innerHTML += "MUTLU YILLAR KAĞAN<br>";
+            if (month === 8 && day === 30) specialEventsElement.innerHTML += "30 AĞUSTOS ZAFER BAYRAMIMIZ KUTLU OLSUN<br>";
+            if (month === 10 && day === 29) specialEventsElement.innerHTML += "29 EKİM CUMHURİYET BAYRAMIMIZ KUTLU OLSUN<br>";
+            if (month === 1 && day === 1) specialEventsElement.innerHTML += "HOŞ GELDİN YENİ YIL. YENİ YILINIZ KUTLU OLSUN<br>";
+            if (month === 4 && day === 23) specialEventsElement.innerHTML += "23 NİSAN ULUSAL EGEMENLİK VE ÇOCUK BAYRAMI<br>";
+            if (month === 5 && day === 19) specialEventsElement.innerHTML += "ATATÜRK'Ü ANMA, GENÇLİK VE SPOR BAYRAMI<br>";
+            if (month === 1 && day === 7) specialEventsElement.innerHTML += "NICOLA TESLA; SEVGİ VE RAHMETLE ANIYORUZ<br>";
+            if (month === 5 && day === 1) specialEventsElement.innerHTML += "AYRTON SENNA; SEVGİ VE RAHMETLE ANIYORUZ<br>";
+            if (month === 11 && day === 10) specialEventsElement.innerHTML += "ATATÜRK; SEVGİ VE RAHMETLE ANIYORUZ<br>";
+            if (month === 11 && day === 30) specialEventsElement.innerHTML += "PAUL WALKER; SEVGİ VE RAHMETLE ANIYORUZ<br>";
+            if (month === 2 && day === 7) specialEventsElement.innerHTML += "İYİ Kİ VARSIN NERMİN. DAHA NİCE SENELERE<br>";
+            if (month === 2 && day === 1) specialEventsElement.innerHTML += "BARIŞ MANÇO; SEVGİ VE RAHMETLE ANIYORUZ<br>";
+            if (month === 6 && day === 28) specialEventsElement.innerHTML += "CÜNEYT ARKIN; SEVGİ VE RAHMETLE ANIYORUZ<br>";
+            if (month === 5 && day === 12) specialEventsElement.innerHTML += "TÜM ANNELERİN; ANNELER GÜNÜ KUTLU OLSUN<br>";
+            if (month === 6 && day === 16) specialEventsElement.innerHTML += "TÜM BABALARIN; BABALAR GÜNÜ KUTLU OLSUN<br>";
+            if (month === 2 && day === 14) specialEventsElement.innerHTML += "SEVGİLİLER GÜNÜ<br>";
+            if (month === 9 && day === 5) specialEventsElement.innerHTML += "1977'DE BUGÜN VOYAGER 1 SONDASI FIRLATILDI<br>";
+            if (month === 8 && day === 20) specialEventsElement.innerHTML += "1977'DE BUGÜN VOYAGER 2 SONDASI FIRLATILDI<br>";
+            if (month === 6 && day === 1) specialEventsElement.innerHTML += "1911'DE BUGÜN TÜRK HAVA KUVVETLERİNİN KURULUŞU<br>";
+
+            if (minutes === 0 && seconds === 0) {
+                var utterance = new SpeechSynthesisUtterance(timeString);
+                window.speechSynthesis.speak(utterance);
+            }
+
+            imageContainer.innerHTML = "";
+            if (month === 3 && day === 5) imageContainer.innerHTML = '<img src="osmanpc.png" alt="Special Event Image">';
+            if (month === 10 && day === 13) imageContainer.innerHTML = '<img src="annemipek.png" alt="Special Event Image">';
+            if (month === 5 && day === 12) imageContainer.innerHTML = '<img src="annelergunu.png" alt="Special Event Image">';
+            if (month === 11 && day === 10) imageContainer.innerHTML = '<img src="ataturkbustt.png" alt="Special Event Image">';
+            if (month === 12 && day === 10) imageContainer.innerHTML = '<img src="secoaileppc.png" alt="Special Event Image">';
+            if (month === 2 && day === 7) imageContainer.innerHTML = '<img src="neropc.png" alt="Special Event Image">';
+            if (month === 5 && day === 1) imageContainer.innerHTML = '<img src="ayrtonsennapc.png" alt="Special Event Image">';
+            if (month === 6 && day === 28) imageContainer.innerHTML = '<img src="cüneytarkinpc.png" alt="Special Event Image">';
+            if (month === 1 && day === 7) imageContainer.innerHTML = '<img src="nicolateslapc.png" alt="Special Event Image">';
+            if (month === 11 && day === 30) imageContainer.innerHTML = '<img src="paulwalkerpc.png" alt="Special Event Image">';
+            if (month === 2 && day === 1) imageContainer.innerHTML = '<img src="barismanco.png" alt="Special Event Image">';
+            if (month === 11 && day === 26) imageContainer.innerHTML = '<img src="ipekimkedi.png" alt="Special Event Image">';
+            if (month === 6 && day === 1) imageContainer.innerHTML = '<img src="airforce.png" alt="Special Event Image">';
+        }
+        setInterval(updateClock, 1000);
+        window.addEventListener('load', updateClock);
+
+        // 3. Kayan Kedi Sesleri
+        var timeoutCatMiyav, timeoutTigerRoar;
+        function stopMarquee() {
+            document.querySelector('.cat-marquee').stop();
+            timeoutCatMiyav = setTimeout(function() { playAudio('catmiyav.mp3'); }, 2000);
+            timeoutTigerRoar = setTimeout(function() { playAudio('tigerroar.mp3'); }, 6000);
+        }
+        function startMarquee() {
+            document.querySelector('.cat-marquee').start();
+            clearTimeout(timeoutCatMiyav);
+            clearTimeout(timeoutTigerRoar);
+        }
+        function playAudio(audioFile) {
+            var audio = new Audio(audioFile);
+            audio.play();
+        }
+
+        // 4. İpek Resim Tıklama ve Arka Plan Değiştirme (Orijinal Koordinatlarla)
+        function myFunctionss() {
+            document.body.style.background = "none";
+            document.body.style.backgroundImage = "url('blackcatbu.jpg')";
+            document.body.style.backgroundPosition = "52.5% -107%";
+            document.body.style.backgroundAttachment = "fixed";
+        }
+
+        function bgChange(bg) {
+            document.body.style.background = bg;
+        }
+
+        // 5. Müzik Kutusu
+        var audioElement;
+        function playRandomSound() {
+            stopMusic();
+            var sounds = [
+                "darkness.mp3", "akon.mp3", "Glass Animals.mp3", "chain.mp3",
+                "ozone.mp3", "maroon.mp3", "reason.mp3", "waving Flag.mp3",
+                "Let Me Down Slowly.mp3", "forever.mp3", "Benikendindenkurtar.mp3",
+                "Nothingelsematter.mp3", "senidertetmeler.mp3", "instasamka.mp3"
+            ];
+            var soundFile = sounds[Math.floor(Math.random() * sounds.length)];
+            audioElement = new Audio(soundFile);
+            audioElement.loop = true;
+            audioElement.play();
+        }
+        function stopMusic() {
+            if (audioElement && !audioElement.paused) {
+                audioElement.pause();
+            }
+        }
+
+        // 6. Murphy Kanunları
+        const murphyQuotes = [
+            "Bir şeyin ters gitme olasılığı varsa, ters gidecektir.",
+            "Bir şeyin birkaç şekilde ters gitme olasılığı varsa, hep en kötüsü olacaktır.",
+            "Bir şeyin olma olasılığı, isteme olasılığı ile ters orantılıdır.",
+            "Er ya da geç olası en kötü koşullar zincirlemesi vuku bulacaktır.",
+            "Ne zaman bir şeyden vazgeçseniz, vazgeçtiğiniz o şey size geri gelir.",
+            "Olmuyorsa zorlayın, kırılırsa zaten değişmesi gerekir.",
+            "Ne kadar beklersen bekle istenmediği zaman gelecektir.",
+            "Çözülen her problem yeni problemler yaratır.",
+            "Her şey yolunda gidiyorsa, kesin bir terslik vardır.",
+            "Bir şeyle fazla oynarsanız, onu bozarsınız.",
+            "Hiçbir şey göründüğü kadar kolay değildir.",
+            "Piyangoda para kazandığınız gün, ölümünüze fazla kalmamıştır.",
+            "Eğer kendinizi iyi hissediyorsanız, üzülmeyin geçer.",
+            "Aradığınız bir şeyi en başından değil en sonundan aramaya başlayın.",
+            "Anlattığın bir şeyin dinlenme ihtimali, anlatma isteğinle ters orantılıdır."
+        ];
+        let currentIndex = 0;
+        function updateQuote() {
+            document.getElementById("murphyText").innerHTML = `<p>"${murphyQuotes[currentIndex]}"</p>`;
+            currentIndex = (currentIndex + 1) % murphyQuotes.length;
+        }
+        setInterval(updateQuote, 5000);
+
+        // 7. Rastgele Resim Slider (Sabit Panel)
+        const images = [
+            'leo1.jpg', 'leo2.jpg', 'cicek1.jpg', 'cicek2.jpg', 'salem1.jpg', 'salem2.jpg',
+            'karakedi1.jpg', 'mila1.jpg', 'cilli1.jpg', 'cilli2.jpg', 'elmas2.jpg', 'elmas1.jpg',
+            'mollyy1.jpg', 'tatli1.jpg', 'tatli2.jpg', 'tatli3.jpg', 'sirin1.jpg', 'sirin2.jpg',
+            'sirin3.jpg', 'sirin4.jpg', 'sirin5.jpg', 'sirin6.jpg', 'sirin7.jpg', 'lunahtml1.jpg',
+            'lunahtml2.jpg', 'pantido1.jpg', 'samur1.jpg', 'samu3.jpg', 'zekoo1.jpg', 'orhan1.jpg',
+            'ipek1.jpg', 'ipek2.jpg', 'ipek3.jpg', 'ipek4.jpg', 'ipek5.jpg', 'ipek6.jpg',
+            'ipek7.jpg', 'ipek8.jpg', 'ipek9.jpg', 'ipek10.jpg', 'ipek11.jpg', 'ipek12.jpg',
+            'ipek13.jpg', 'ipek14.jpg', 'ipek15.jpg', 'ipek16.jpg', 'ipek17.jpg', 'momcat.jpg',
+            'ipekblckat.jpg', 'secoskagan.jpg', '3990.jpg'
+        ];
+        const sliderContainer = document.getElementById('slider');
+        function changeImage() {
+            const randomImage = images[Math.floor(Math.random() * images.length)];
+            const img = document.createElement('img');
+            img.src = randomImage;
+            img.classList.add('slider-image');
+            sliderContainer.innerHTML = '';
+            sliderContainer.appendChild(img);
+            void img.offsetWidth;
+            img.style.opacity = '1';
+            setTimeout(() => { img.style.opacity = '0'; }, 3500);
+        }
+        changeImage();
+        setInterval(changeImage, 5000);
+
+        // 8. Klavye Kedi Tıklama Sesleri
+        var catAudio = new Audio("catmiyav.mp3");
+        var tigerAudio = new Audio("tigerroar.mp3");
+        var lastClickTime = 0;
+        document.getElementById("klavyeKedi").addEventListener("click", function() {
+            var currentTime = new Date().getTime();
+            if (currentTime - lastClickTime < 500) {
+                tigerAudio.play();
+                catAudio.pause();
+                catAudio.currentTime = 0;
+            } else {
+                catAudio.play();
+            }
+            lastClickTime = currentTime;
+        });
+
+        // 9. İletişim Formu Doğrulama
+        function validateForm() {
+            var name = document.getElementById("name").value;
+            var email = document.getElementById("email").value;
+            var continent = document.getElementById("continent").value;
+            var message = document.getElementById("message").value;
+            if (!name || !email || !continent || !message) {
+                alert("Lütfen tüm alanları doldurunuz.");
+                return false;
+            }
+            alert("Form gönderildi!");
+            return true;
+        }
+
+        // 10. Kar, Kalp, Bayrak ve Paraşüt Yağmuru Efektleri
+        const currentMonth = new Date().getMonth() + 1;
+        const currentDay = new Date().getDate();
+        let parasutInterval, bursaInterval, snowInterval, heartInterval;
+
+        function createFallingEffect(className) {
+            const el = document.createElement('div');
+            el.className = className;
+            document.body.appendChild(el);
+            el.style.left = (Math.random() * (window.innerWidth - 60) + 10) + 'px';
+            el.style.top = '-50px';
+            let speedY = 2;
+            let speedX = Math.random() < 0.5 ? -1 : 1;
+            const moveId = setInterval(() => {
+                const top = parseFloat(el.style.top);
+                const left = parseFloat(el.style.left);
+                el.style.top = (top + speedY) + 'px';
+                el.style.left = (left + speedX) + 'px';
+                if (top > window.innerHeight || left > window.innerWidth || left < 0) {
+                    clearInterval(moveId);
+                    el.remove();
+                }
+            }, 15);
+        }
+
+        function startParasutfall() { clearInterval(parasutInterval); parasutInterval = setInterval(() => createFallingEffect('parasutflake'), 1000); }
+        function stopParasutfall() { clearInterval(parasutInterval); }
+        function startBursafall() { clearInterval(bursaInterval); bursaInterval = setInterval(() => createFallingEffect('bursaflake'), 1000); }
+        function stopBursafall() { clearInterval(bursaInterval); }
+        function startSnowfall() { clearInterval(snowInterval); snowInterval = setInterval(() => createFallingEffect('snowflake'), 1000); }
+        function stopSnowfall() { clearInterval(snowInterval); }
+        function startHeartfall() { clearInterval(heartInterval); heartInterval = setInterval(() => createFallingEffect('heartflake'), 1000); }
+        function stopHeartfall() { clearInterval(heartInterval); }
+
+        document.getElementById('startBtnheart').addEventListener('click', startHeartfall);
+        document.getElementById('stopBtnheart').addEventListener('click', stopHeartfall);
+        document.getElementById('startBtnbursa').addEventListener('click', startBursafall);
+        document.getElementById('stopBtnbursa').addEventListener('click', stopBursafall);
+        document.getElementById('startBtnparasut').addEventListener('click', startParasutfall);
+        document.getElementById('stopBtnparasut').addEventListener('click', stopParasutfall);
+        document.getElementById('startBtnsnow').addEventListener('click', startSnowfall);
+        document.getElementById('stopBtnsnow').addEventListener('click', stopSnowfall);
+
+        if (currentMonth === 6 && currentDay === 1) startParasutfall();
+        if ((currentMonth === 11 && currentDay === 10) || (currentMonth === 10 && currentDay === 29) || (currentMonth === 8 && currentDay === 30)) startBursafall();
+        if (currentMonth === 1 && currentDay === 1) startSnowfall();
+        if ([2, 3, 5, 6, 7, 10, 11, 12].includes(currentMonth)) {
+            if ((currentMonth === 2 && (currentDay === 14 || currentDay === 7)) ||
+                (currentMonth === 5 && currentDay === 12) ||
+                (currentMonth === 6 && currentDay === 16) ||
+                (currentMonth === 11 && currentDay === 26) ||
+                (currentMonth === 10 && currentDay === 13) ||
+                (currentMonth === 12 && currentDay === 10) ||
+                (currentMonth === 7 && (currentDay === 9 || currentDay === 14)) ||
+                (currentMonth === 3 && currentDay === 5)) {
+                startHeartfall();
+            }
+        }
+
+        // 11. Paraşüt Vurma Oyunu
+        const parasuflakes = [];
+        let score = 0;
+        let gameActive = true;
+
+        function spawnGameParasuflake(minSpeed, maxSpeed) {
+            const p = document.createElement('div');
+            p.className = 'parasuflake';
+            document.body.appendChild(p);
+            p.style.left = (Math.random() * Math.max(100, window.innerWidth - 150) + 20) + 'px';
+            p.style.top = '-150px';
+            const speedY = Math.random() * (maxSpeed - minSpeed) + minSpeed;
+            const speedX = (Math.random() - 0.5) * 2;
+
+            p.addEventListener('click', () => {
+                p.remove();
+                const idx = parasuflakes.findIndex(item => item.element === p);
+                if (idx > -1) parasuflakes.splice(idx, 1);
+                new Audio('shoot.mp3').play();
+                increaseScore();
+            });
+            parasuflakes.push({ element: p, speedX, speedY });
+        }
+
+        function increaseScore() {
+            if (!gameActive) return;
+            score++;
+            document.getElementById('score').innerText = score;
+
+            if (score === 3 || score === 9) {
+                new Audio('nextlevel.mp3').play();
+            }
+
+            if (score === 3) {
+                document.getElementById('Level2').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('Level2').style.display = 'none';
+                    for (let i = 0; i < 6; i++) spawnGameParasuflake(1.0, 1.8);
+                }, 2000);
+            } else if (score === 9) {
+                document.getElementById('Level3').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('Level3').style.display = 'none';
+                    for (let i = 0; i < 9; i++) spawnGameParasuflake(1.2, 2.2);
+                }, 2000);
+            } else if (score === 18) {
+                new Audio('finish.mp3').play();
+                showAferinMessage();
+                setButtonsOpacityToOne();
+            }
+        }
+
+        function setButtonsOpacityToOne() {
+            const positions = [
+                { id: "startBtnsnow", top: "30%", left: "1vw" },
+                { id: "stopBtnsnow", top: "30%", right: "1vw" },
+                { id: "startBtnheart", top: "42%", left: "1vw" },
+                { id: "stopBtnheart", top: "42%", right: "1vw" },
+                { id: "startBtnbursa", top: "54%", left: "1vw" },
+                { id: "stopBtnbursa", top: "54%", right: "1vw" },
+                { id: "startBtnparasut", top: "66%", left: "1vw" },
+                { id: "stopBtnparasut", top: "66%", right: "1vw" }
+            ];
+            positions.forEach(pos => {
+                const btn = document.getElementById(pos.id);
+                if (btn) {
+                    btn.style.opacity = '1';
+                    btn.style.top = pos.top;
+                    if (pos.left) btn.style.left = pos.left;
+                    if (pos.right) btn.style.right = pos.right;
+                }
+            });
+            setTimeout(() => {
+                positions.forEach(pos => {
+                    const btn = document.getElementById(pos.id);
+                    if (btn) {
+                        btn.style.opacity = '0';
+                        btn.style.top = '-500px';
+                    }
+                });
+            }, 300000);
+        }
+
+        function showAferinMessage() {
+            const msg = document.createElement('div');
+            msg.textContent = 'TEBRİKLER';
+            msg.style.position = 'fixed';
+            msg.style.top = 'calc(3.8 * var(--u))';
+            msg.style.left = 'calc(1.2 * var(--u))';
+            msg.style.fontSize = 'calc(2.2 * var(--u))';
+            msg.style.color = 'lawngreen';
+            msg.style.zIndex = '1000';
+            document.body.appendChild(msg);
+        }
+
+        function stopGame() {
+            gameActive = false;
+            parasuflakes.forEach(p => p.element.remove());
+            parasuflakes.length = 0;
+        }
+
+        function updateParasuflakes() {
+            if (gameActive) {
+                for (let i = parasuflakes.length - 1; i >= 0; i--) {
+                    const p = parasuflakes[i];
+                    const currentTop = parseFloat(p.element.style.top);
+                    const currentLeft = parseFloat(p.element.style.left);
+
+                    if (currentTop > window.innerHeight) {
+                        document.getElementById('gameOver').style.display = 'block';
+                        new Audio('gameovers.mp3').play();
+                        stopGame();
+                        break;
+                    } else {
+                        let nextLeft = currentLeft + p.speedX;
+                        if (nextLeft < 10 || nextLeft > window.innerWidth - 100) p.speedX *= -1;
+                        p.element.style.top = (currentTop + p.speedY) + 'px';
+                        p.element.style.left = (currentLeft + p.speedX) + 'px';
+                    }
+                }
+            }
+            requestAnimationFrame(updateParasuflakes);
+        }
+
+        for (let i = 0; i < 3; i++) spawnGameParasuflake(0.8, 1.5);
+        updateParasuflakes();
+    </script>
+</body>
+</html>
