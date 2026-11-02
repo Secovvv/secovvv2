@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            color: black;
+        }
+
+        #clock {
+            font-size: 27px;
+            color: blue;
+        }
+
+        #date {
+            font-size: 24px;
+            color: green;
+        }
+
+        #specialEvents {
+            font-size: 36px;
+            color: red;
+        }
+    </style>
+    <title>Dijital Saat</title>
+</head>
+<body>
+    <div id="clock"></div>
+    <div id="date"></div>
+    <div id="specialEvents"></div>
+
+    <script>
+        function updateClock() {
+            var now;
+            
+            if (navigator.onLine) {
+                now = new Date(); // İnternet saati kullanılabilirse
+            } else {
+                now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })); // Yerel saat
+            }
+
+            var hours = now.getHours();
+            var minutes = now.getMinutes();
+            var seconds = now.getSeconds();
+
+            var day = now.getDate();
+            var month = now.getMonth() + 1;
+            var year = now.getFullYear();
+
+            var clockElement = document.getElementById("clock");
+            var dateElement = document.getElementById("date");
+            var specialEventsElement = document.getElementById("specialEvents");
+
+            var timeString = hours.toString().padStart(2, '0') + ":" + minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0');
+            var dateString = day + "/" + month + "/" + year;
+
+            clockElement.innerHTML = timeString;
+            dateElement.innerHTML = dateString;
+
+            // Özel gün kontrolü
+            specialEventsElement.innerHTML = ""; // Her güncellemede temizle
+
+            if (month === 7 && day === 9) {
+                specialEventsElement.innerHTML += "MUTLU YILLAR SECOVVV<br>";
+            }
+            if (month === 11 && day === 10) {
+                specialEventsElement.innerHTML += "SAYGI VE ÖZLEMLE ANILIYORSUN SEVGİLİ ATATÜRK<br>";
+            }
+            if (month === 11 && day === 26) {
+                specialEventsElement.innerHTML += "MUTLU SENELER İPEK'İM İYİ Kİ VARSIN.<br>";
+            }
+
+            if (year === 2023 && month === 11 && day === 29 && hours === 1 && minutes === 40) {
+                specialEventsElement.innerHTML += "NE MUTLU TÜRKÜM DİYENE!<br>";
+            }
+
+            // Her saat başında sesli bildirim
+            if (minutes === 0 && seconds === 0) {
+                var utterance = new SpeechSynthesisUtterance(timeString);
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Saati güncellemek için her saniyede bir fonksiyonu çağır
+        setInterval(updateClock, 1000);
+
+        // Sayfa yüklendiğinde saati ve tarihi güncelle
+        window.onload = function () {
+            updateClock();
+        };
+    </script>
+</body>
+</html>
