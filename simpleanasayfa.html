@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Dot Game</title>
+    <style>
+        body {
+            background-color: white;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #score-board {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: black;
+        }
+
+        #game-over, #congrats {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 10%;
+            transform: translate(-50%, -50%);
+            font-size: 25px;
+            color: red;
+          
+        }
+
+        #tebrik-ederim, #congrats {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 10%;
+            transform: translate(-50%, -50%);
+            font-size: 25px;
+            color: red;
+     
+
+        }
+
+        #red-dot {
+            position: absolute;
+            width: 27px;
+            height: 27px;
+            border-radius: 100%;
+            background-color: red;
+            cursor: pointer;
+border-color: lightgreen;
+ border-style: solid;
+    border-width: 5px;
+            
+
+        }
+
+ 
+
+
+    </style>
+
+<style>
+      @keyframes fade-in {
+         from {
+            opacity: 0;
+            /* Start with 0 opacity */
+         }
+         to {
+            opacity: 1;
+            /* transition to full opacity */
+         }
+      }
+      #tebrik-ederim, #congrats {
+         animation: fade-in 4s;
+      }
+   </style>
+
+<style>
+      @keyframes fade-in {
+         from {
+            opacity: 0;
+            /* Start with 0 opacity */
+         }
+         to {
+            opacity: 1;
+            /* transition to full opacity */
+         }
+      }
+      #game-over, #congrats {
+         animation: fade-in 4s;
+      }
+   </style>
+
+
+</head>
+<body>
+    <div id="score-board">Score: <span id="score">10</span></div>
+   
+   <div id="red-dot" ></div>
+    <div id="game-over">GAME OVER</div>
+    <div id="congrats">TEBRİKLER</div>
+
+
+
+
+    <script>
+        let score = 10;
+        let dotTimer;
+
+        function getRandomPosition() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const x = Math.floor(Math.random() * (screenWidth - 20));
+            const y = Math.floor(Math.random() * (screenHeight - 20));
+            return { x, y };
+        }
+
+        function showDot() {
+            const dot = document.getElementById('red-dot');
+            const position = getRandomPosition();
+            dot.style.left = `${position.x}px`;
+            dot.style.top = `${position.y}px`;
+            dot.style.display = 'block';
+
+            dotTimer = setTimeout(() => {
+                dot.style.display = 'none';
+                score--;
+                document.getElementById('score').innerText = score;
+
+                if (score === 0) {
+                        endGame('GAME OVER');
+                    } else {
+                    showDot();
+                }
+            }, 3000);
+        }
+
+        function endGame(message) {
+            clearTimeout(dotTimer);
+            document.getElementById('game-over').innerText = message;
+            document.getElementById('game-over').style.display = 'block';
+        }
+
+        function congrats() {
+            clearTimeout(dotTimer);
+            document.getElementById('congrats').style.display = 'block';
+        }
+
+        document.getElementById('red-dot').addEventListener('click', () => {
+            clearTimeout(dotTimer);
+            score++;
+
+document.getElementById('red-dot').style.border = '4px solid lightgreen';
+
+
+
+
+
+            document.getElementById('score').innerText = score;
+
+
+
+
+            if (score === 20) {
+                congrats();
+document.getElementById('red-dot').style.display = 'none';
+            } else {
+
+                showDot();
+            }
+        }
+ 
+        );
+
+        showDot();
+
+
+    </script>
+
+
+</body>
+</html>
+

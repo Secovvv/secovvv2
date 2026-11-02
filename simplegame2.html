@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #f0f0f0;
+    }
+
+    canvas {
+      display: block;
+      margin: auto;
+      border: 1px solid #ccc;
+    }
+
+    #gameOver {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2em;
+      color: red;
+      display: none;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 1.5em;
+    }
+  </style>
+  <title>Game</title>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="1024" height="768"></canvas>
+<div id="gameOver">OYUN BİTTİ</div>
+<div id="score">Skor: 0</div>
+
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const gameOverDiv = document.getElementById('gameOver');
+  const scoreDiv = document.getElementById('score');
+
+  let score = 0;
+  let gameInterval;
+
+  const player = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    width: 50,
+    height: 50,
+    angle: 0,
+    speed: 5,
+  };
+
+  const bullets = [];
+  const circles = [];
+
+  function drawPlayer() {
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(player.angle);
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+    ctx.restore();
+  }
+
+  function drawBullet(bullet) {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(bullet.x, bullet.y, 10, 5);
+  }
+
+  function drawCircle(circle) {
+    ctx.beginPath();
+    ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
+    ctx.fillStyle = 'green';
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function updateGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Update player position
+    player.x += Math.cos(player.angle) * player.speed;
+    player.y += Math.sin(player.angle) * player.speed;
+
+    // Check if player is out of bounds
+    player.x = Math.max(0, Math.min(canvas.width, player.x));
+    player.y = Math.max(0, Math.min(canvas.height, player.y));
+
+    // Draw player
+    drawPlayer();
+
+    // Draw bullets
+    bullets.forEach((bullet, index) => {
+      bullet.x += Math.cos(bullet.angle) * 10;
+      bullet.y += Math.sin(bullet.angle) * 10;
+      drawBullet(bullet);
+
+      // Check for collision with circles
+      circles.forEach((circle, circleIndex) => {
+        const dx = bullet.x - circle.x;
+        const dy = bullet.y - circle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < circle.radius) {
+          bullets.splice(index, 1);
+          circles.splice(circleIndex, 1);
+          score += 1;
+          scoreDiv.textContent = `Skor: ${score}`;
+        }
+      });
+    });
+
+    // Draw circles
+    circles.forEach(drawCircle);
+
+    // Check for collision with player
+    circles.forEach(circle => {
+      const dx = player.x - circle.x;
+      const dy = player.y - circle.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < player.width / 2 + circle.radius) {
+        clearInterval(gameInterval);
+        gameOverDiv.textContent = 'OYUN BİTTİ - Daire ile çarpışma!';
+        gameOverDiv.style.display = 'block';
+      }
+    });
+  }
+
+  function startGame() {
+    gameInterval = setInterval(() => {
+      // Add circles every 2 seconds
+      const circle = {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: 30,
+      };
+      circles.push(circle);
+    }, 1000);
+
+    // Listen for mouse movements to rotate the player
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+    });
+
+    // Listen for keyboard input to move the player
+    window.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowUp':
+          player.y -= player.speed;
+          break;
+        case 'ArrowDown':
+          player.y += player.speed;
+          break;
+        case 'ArrowLeft':
+          player.x -= player.speed;
+          break;
+        case 'ArrowRight':
+          player.x += player.speed;
+          break;
+      }
+    });
+
+    // Listen for mouse clicks to shoot bullets
+    canvas.addEventListener('mousedown', () => {
+      const bullet = {
+        x: player.x,
+        y: player.y,
+        angle: player.angle,
+      };
+      bullets.push(bullet);
+    });
+  }
+
+  startGame();
+  setInterval(updateGame, 1000 / 60); // Update the game at 60 frames per second
+</script>
+
+</body>
+</html>
