@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="600">
     <title>Secovvv</title>
-    <link rel="stylesheet" href="alev.css">
 
     <style>
         :root {
             --z: 1;
-            --u: calc(1vw * var(--z));
+            /* Tüm sayfayı orantılı küçültüp ortaya toplamak için 0.82vw */
+            --u: calc(0.82vw * var(--z));
         }
 
         * {
@@ -29,96 +29,447 @@
             padding: 0;
             width: 100%;
             min-height: 100vh;
-            overflow-x: auto;
+            overflow-x: hidden;
             font-family: Arial, sans-serif;
             background: linear-gradient(360deg, white, black);
             background-attachment: fixed;
             background-position: 52.5% -131%;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background 0.4s ease;
         }
 
-        /* Çözünürlük ve Skor Sabit Kutuları */
-        #resolution-container {
+        /* ==========================================================================
+           NEON FX TRAIL & PAINT KANVASLARI (Sayfadaki butonlara tıklamayı engellemez)
+           ========================================================================== */
+        #canvasContainer {
             position: fixed;
-            top: calc(0.8 * var(--u));
-            right: calc(0.8 * var(--u));
-            padding: calc(0.5 * var(--u)) calc(1 * var(--u));
-            background-color: rgba(255, 255, 255, 0.75);
-            color: black;
-            font-size: calc(1.3 * var(--u));
-            border-radius: calc(0.6 * var(--u));
-            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 997;
+        }
+
+        #staticCanvas, #heartCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
             pointer-events: none;
         }
 
-        #scoreboard {
-            position: fixed;
-            top: calc(0.8 * var(--u));
-            left: calc(1.2 * var(--u));
-            font-size: calc(2 * var(--u));
-            color: lawngreen;
-            text-shadow: calc(0.1 * var(--u)) calc(0.1 * var(--u)) calc(0.2 * var(--u)) black;
-            z-index: 1000;
-            pointer-events: none;
+        #staticCanvas { z-index: 1; }
+        #heartCanvas  { z-index: 2; }
+
+        /* ==========================================================================
+           TEPEDEKİ NEON FX KONTROL PANELİ
+           ========================================================================== */
+        .top-ui-bar {
+            position: relative;
+            z-index: 1002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: calc(0.7 * var(--u));
+            background: rgba(10, 14, 18, 0.92);
+            backdrop-filter: blur(8px);
+            padding: calc(0.45 * var(--u)) calc(1.2 * var(--u));
+            margin-top: calc(0.4 * var(--u));
+            margin-bottom: calc(1.1 * var(--u));
+            border-radius: calc(2.5 * var(--u));
+            border: calc(0.1 * var(--u)) solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 0 calc(1.8 * var(--u)) rgba(0, 0, 0, 0.85);
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
 
-        #Level2, #Level3, #gameOver {
+        .power-switch {
+            padding-right: calc(0.8 * var(--u));
+            border-right: calc(0.1 * var(--u)) solid rgba(255, 255, 255, 0.15);
+        }
+
+        .power-switch .switch-track {
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .power-switch.active .switch-track {
+            background: rgba(57, 255, 20, 0.8) !important;
+            border-color: #39ff14 !important;
+            box-shadow: 0 0 calc(0.9 * var(--u)) rgba(57, 255, 20, 0.65) !important;
+        }
+
+        .power-switch.active .switch-label {
+            color: #39ff14 !important;
+            text-shadow: 0 0 calc(0.6 * var(--u)) rgba(57, 255, 20, 0.7) !important;
+        }
+
+        .fx-controls {
+            display: flex;
+            align-items: center;
+            gap: calc(0.7 * var(--u));
+            transition: opacity 0.25s ease;
+        }
+
+        .fx-controls.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+            filter: grayscale(80%);
+        }
+
+        .shape-group {
+            display: flex;
+            align-items: center;
+            gap: calc(0.45 * var(--u));
+            padding-right: calc(0.8 * var(--u));
+            border-right: calc(0.1 * var(--u)) solid rgba(255, 255, 255, 0.15);
+        }
+
+        .shape-btn {
+            width: calc(2.5 * var(--u));
+            height: calc(2.5 * var(--u));
+            border-radius: 50%;
+            border: calc(0.1 * var(--u)) solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-size: calc(1.15 * var(--u));
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+
+        .shape-btn:hover {
+            transform: scale(1.1);
+            border-color: #fff;
+        }
+
+        .shape-btn.active[data-mode="heart"] {
+            background: rgba(255, 0, 85, 0.35);
+            border-color: #ff0055;
+            box-shadow: 0 0 calc(0.9 * var(--u)) #ff0055;
+        }
+
+        .shape-btn.active[data-mode="skull"] {
+            background: rgba(255, 30, 0, 0.35);
+            border-color: #ffd700;
+            box-shadow: 0 0 calc(0.9 * var(--u)) #ff1e00;
+        }
+
+        .shape-btn.active[data-mode="letterS"] {
+            background: linear-gradient(135deg, rgba(140, 17, 57, 0.75), rgba(75, 188, 235, 0.45));
+            border-color: #4bbceb;
+            color: #4bbceb;
+            box-shadow: 0 0 calc(0.9 * var(--u)) #4bbceb;
+        }
+
+        .shape-btn.active[data-mode="fire"] {
+            background: rgba(255, 170, 0, 0.42);
+            border-color: #ffd000;
+            box-shadow: 0 0 calc(1.1 * var(--u)) #ff8800;
+        }
+
+        .shape-btn.active[data-mode="paw"] {
+            background: rgba(255, 102, 178, 0.35);
+            border-color: #ff66b2;
+            box-shadow: 0 0 calc(1 * var(--u)) #ff66b2;
+        }
+
+        .shape-btn[data-mode="ts"] {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: calc(0.9 * var(--u));
+            font-weight: 900;
+            background: linear-gradient(135deg, #6c0b2a 50%, #4bbceb 50%);
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+            border-color: rgba(75, 188, 235, 0.6);
+        }
+
+        .shape-btn.active[data-mode="ts"] {
+            border-color: #ffd700;
+            box-shadow: 0 0 calc(1 * var(--u)) #4bbceb, 0 0 calc(0.6 * var(--u)) #6c0b2a;
+            transform: scale(1.08);
+        }
+
+        .shape-btn[data-mode="matrix"] {
+            font-family: 'Courier New', monospace;
+            font-size: calc(0.95 * var(--u));
+            letter-spacing: -0.5px;
+            color: #00ff41;
+            border-color: rgba(0, 255, 65, 0.45);
+        }
+
+        .shape-btn.active[data-mode="matrix"] {
+            background: rgba(0, 255, 65, 0.32);
+            border-color: #00ff41;
+            color: #ffffff;
+            text-shadow: 0 0 calc(0.6 * var(--u)) #00ff41;
+            box-shadow: 0 0 calc(1.1 * var(--u)) #00ff41, inset 0 0 calc(0.6 * var(--u)) rgba(0, 255, 65, 0.5);
+        }
+
+        .switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: calc(0.6 * var(--u));
+            cursor: pointer;
+        }
+
+        .switch-label {
+            font-size: calc(1 * var(--u));
+            font-weight: bold;
+            color: #cbd5e1;
+            letter-spacing: 0.3px;
+        }
+
+        .switch-track {
+            position: relative;
+            width: calc(3.2 * var(--u));
+            height: calc(1.65 * var(--u));
+            background: rgba(255, 255, 255, 0.15);
+            border: calc(0.1 * var(--u)) solid rgba(255, 0, 85, 0.6);
+            border-radius: calc(1.5 * var(--u));
+            transition: 0.25s;
+        }
+
+        .switch-thumb {
+            position: absolute;
+            top: calc(0.15 * var(--u));
+            left: calc(0.2 * var(--u));
+            width: calc(1.15 * var(--u));
+            height: calc(1.15 * var(--u));
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .switch-wrapper.active .switch-track {
+            background: rgba(0, 255, 65, 0.75);
+            border-color: #00ff41;
+            box-shadow: 0 0 calc(0.9 * var(--u)) rgba(0, 255, 65, 0.6);
+        }
+
+        .switch-wrapper.active .switch-thumb {
+            transform: translateX(calc(1.45 * var(--u)));
+        }
+
+        .switch-wrapper.active .switch-label {
+            color: #fff;
+            text-shadow: 0 0 calc(0.6 * var(--u)) #00ff41;
+        }
+
+        .hint-badge {
+            font-size: calc(0.88 * var(--u));
+            color: #ffd700;
+            border-left: calc(0.1 * var(--u)) solid rgba(255, 255, 255, 0.15);
+            padding-left: calc(0.7 * var(--u));
             display: none;
-            position: fixed;
-            top: calc(3.8 * var(--u));
-            left: calc(1.2 * var(--u));
-            font-size: calc(2 * var(--u));
-            color: lawngreen;
-            text-shadow: calc(0.1 * var(--u)) calc(0.1 * var(--u)) calc(0.3 * var(--u)) black;
-            z-index: 1000;
-            pointer-events: none;
         }
 
-        /* Ana Sayfa Akış Kapsayıcısı */
+        .hint-badge.visible { display: inline-block; }
+
+        .clear-btn {
+            background: rgba(255, 0, 85, 0.22);
+            color: #ff5e7e;
+            border: calc(0.1 * var(--u)) solid rgba(255, 0, 85, 0.5);
+            padding: calc(0.35 * var(--u)) calc(0.85 * var(--u));
+            border-radius: calc(1.2 * var(--u));
+            font-size: calc(0.88 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: none;
+        }
+
+        .clear-btn.visible { display: inline-block; }
+        .clear-btn:hover {
+            background: #ff0055;
+            color: #fff;
+            box-shadow: 0 0 calc(0.8 * var(--u)) #ff0055;
+        }
+
+        /* ==========================================================================
+           ANA SAYFA AKIŞ KAPSAYICISI
+           ========================================================================== */
         .page-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: calc(98 * var(--u));
-            margin: 0 auto;
-            padding: calc(0.5 * var(--u)) calc(1.5 * var(--u));
+            width: 80vw;
+            max-width: calc(96 * var(--u));
+            margin: calc(2.4 * var(--u)) auto calc(1.5 * var(--u)) auto;
+            padding: calc(1.6 * var(--u)) calc(3 * var(--u)) calc(1.5 * var(--u)) calc(3 * var(--u));
+            background: rgba(0, 0, 0, 0.22);
+            border-radius: calc(2 * var(--u));
+            box-shadow: 0 0 calc(3 * var(--u)) rgba(0, 0, 0, 0.45);
             position: relative;
             z-index: 2;
         }
 
-        /* Üst Saat ve Gramer Bölümü */
+        /* Sol Üst: Tarih + Efektler Menüsü (Alt Alta Hizalı) */
+        .effects-menu-container {
+            position: absolute;
+            top: calc(1.4 * var(--u));
+            left: calc(2.5 * var(--u));
+            z-index: 1003;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        /* Sağ Üst: Saat + Oyunlar Menüsü (Alt Alta Hizalı) */
+        .games-menu-container {
+            position: absolute;
+            top: calc(1.4 * var(--u));
+            right: calc(2.5 * var(--u));
+            z-index: 1003;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .menu-trigger-btn {
+            background: rgba(15, 15, 15, 0.88);
+            color: lawngreen;
+            border: calc(0.15 * var(--u)) solid lawngreen;
+            border-radius: calc(0.8 * var(--u));
+            padding: calc(0.5 * var(--u)) calc(1.1 * var(--u));
+            font-size: calc(1.2 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: calc(0.5 * var(--u));
+            box-shadow: 0 calc(0.3 * var(--u)) calc(0.8 * var(--u)) rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s, background-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .menu-trigger-btn:hover {
+            background: rgba(35, 35, 35, 0.95);
+            transform: scale(1.03);
+        }
+
+        .menu-dropdown {
+            display: none;
+            flex-direction: column;
+            gap: calc(0.5 * var(--u));
+            margin-top: calc(0.5 * var(--u));
+            background: rgba(15, 15, 15, 0.94);
+            border: calc(0.15 * var(--u)) solid #444;
+            border-radius: calc(0.8 * var(--u));
+            padding: calc(0.7 * var(--u));
+            box-shadow: 0 calc(0.5 * var(--u)) calc(1.5 * var(--u)) rgba(0, 0, 0, 0.85);
+            min-width: calc(13.5 * var(--u));
+        }
+
+        .menu-dropdown.open {
+            display: flex;
+        }
+
+        /* Efekt Aç/Kapa Butonları */
+        .effect-toggle-btn {
+            background: #222;
+            color: #ddd;
+            border: calc(0.12 * var(--u)) solid #555;
+            border-radius: calc(0.5 * var(--u));
+            padding: calc(0.45 * var(--u)) calc(0.8 * var(--u));
+            font-size: calc(1.05 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: calc(0.6 * var(--u));
+            transition: all 0.2s;
+        }
+
+        .effect-toggle-btn:hover {
+            border-color: #999;
+            background: #2c2c2c;
+        }
+
+        .effect-toggle-btn.active {
+            background: rgba(124, 252, 0, 0.18);
+            color: lawngreen;
+            border-color: lawngreen;
+            box-shadow: 0 0 calc(0.6 * var(--u)) rgba(124, 252, 0, 0.4);
+        }
+
+        .status-badge {
+            font-size: calc(0.8 * var(--u));
+            padding: calc(0.15 * var(--u)) calc(0.4 * var(--u));
+            border-radius: calc(0.3 * var(--u));
+            background: #444;
+            color: #aaa;
+        }
+
+        .effect-toggle-btn.active .status-badge {
+            background: lawngreen;
+            color: #000;
+        }
+
+        /* Oyun Link Butonları */
+        .game-link-btn {
+            background: #222;
+            color: #ddd;
+            border: calc(0.12 * var(--u)) solid #555;
+            border-radius: calc(0.5 * var(--u));
+            padding: calc(0.5 * var(--u)) calc(0.9 * var(--u));
+            font-size: calc(1.05 * var(--u));
+            font-weight: bold;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: calc(0.8 * var(--u));
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .game-link-btn:hover {
+            background: rgba(124, 252, 0, 0.18);
+            color: lawngreen;
+            border-color: lawngreen;
+            transform: translateX(calc(-0.2 * var(--u)));
+            box-shadow: 0 0 calc(0.6 * var(--u)) rgba(124, 252, 0, 0.35);
+        }
+
+        .game-play-badge {
+            font-size: calc(0.8 * var(--u));
+            color: lawngreen;
+            opacity: 0.8;
+        }
+
+        /* Tarih (Efektler Üstü) ve Saat (Oyunlar Üstü) Stilleri */
+        #clock, #date {
+            color: lawngreen;
+            font-size: calc(1.65 * var(--u));
+            font-family: cursive;
+            font-style: italic;
+            font-weight: bold;
+            -webkit-text-stroke: calc(0.05 * var(--u)) green;
+            text-shadow: 0 0 calc(0.6 * var(--u)) rgba(0, 0, 0, 0.9);
+            line-height: 1.1;
+            margin: 0 0 calc(0.45 * var(--u)) 0;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Özel Gün Mesaj Alanı */
         .top-bar {
             display: flex;
             flex-direction: column;
             align-items: center;
             margin-top: calc(0.2 * var(--u));
             margin-bottom: 0;
-            gap: calc(0.2 * var(--u));
-        }
-
-        .gramer-btn {
-            cursor: pointer;
-            background-color: navajowhite;
-            border: calc(0.15 * var(--u)) solid #333;
-            border-radius: calc(0.4 * var(--u));
-            padding: calc(0.3 * var(--u)) calc(1 * var(--u));
-            font-weight: bold;
-            font-size: calc(1.1 * var(--u));
-            transition: transform 0.2s;
-        }
-
-        .gramer-btn:hover {
-            transform: scale(1.05);
-        }
-
-        #clock, #date {
-            color: lawngreen;
-            font-size: calc(1.8 * var(--u));
-            font-family: cursive;
-            font-style: italic;
-            -webkit-text-stroke: calc(0.06 * var(--u)) green;
-            text-align: center;
-            line-height: 1.1;
-            margin: 0;
         }
 
         #specialEvents {
@@ -160,7 +511,7 @@
             align-items: center;
             width: 100%;
             gap: calc(1 * var(--u));
-            margin: 0 0 calc(1 * var(--u)) 0;
+            margin: 0 0 calc(1.2 * var(--u)) 0;
         }
 
         .left-controls {
@@ -189,59 +540,84 @@
             border: calc(0.35 * var(--u)) solid black;
             border-radius: 50%;
             cursor: pointer;
-            transition: border-color 0.3s, transform 0.3s;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
             display: block;
             flex-shrink: 0;
         }
 
         .avatar-circle:hover {
-            border-color: #B71C1C;
-            transform: scale(1.05);
+            border-color: lawngreen;
+            transform: scale(1.06);
+            box-shadow: 0 0 calc(0.8 * var(--u)) rgba(124, 252, 0, 0.5);
         }
 
-        .music-and-color {
+        /* PRO MÜZİK ÇALAR */
+        .pro-music-player {
+            background: rgba(15, 15, 15, 0.92);
+            border: calc(0.15 * var(--u)) solid darkgoldenrod;
+            border-radius: calc(1 * var(--u));
+            padding: calc(0.55 * var(--u)) calc(0.8 * var(--u));
             display: flex;
             flex-direction: column;
-            gap: calc(0.6 * var(--u));
             align-items: center;
+            gap: calc(0.45 * var(--u));
+            width: calc(17.5 * var(--u));
+            box-shadow: 0 calc(0.35 * var(--u)) calc(1 * var(--u)) rgba(0, 0, 0, 0.7);
             flex-shrink: 0;
         }
 
-        .music-btns {
-            display: flex;
-            gap: calc(0.6 * var(--u));
-            flex-wrap: nowrap;
-        }
-
-        .music-btn {
-            background-color: darkred;
-            border: calc(0.1 * var(--u)) solid #fff;
-            border-radius: calc(0.8 * var(--u));
-            cursor: pointer;
-            color: white;
-            padding: calc(0.4 * var(--u)) calc(0.9 * var(--u));
-            font-size: calc(1 * var(--u));
+        .track-display {
+            width: 100%;
+            background: #050505;
+            border: calc(0.08 * var(--u)) solid #333;
+            border-radius: calc(0.45 * var(--u));
+            padding: calc(0.28 * var(--u)) calc(0.6 * var(--u));
+            color: lawngreen;
+            font-family: monospace;
+            font-size: calc(0.92 * var(--u));
+            text-align: center;
             white-space: nowrap;
-            transition: background-color 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.3px;
         }
 
-        .music-btn:hover {
-            background-color: green;
+        .player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: calc(0.4 * var(--u));
+            width: 100%;
         }
 
-        .color-palette {
-            width: calc(11 * var(--u));
-            height: calc(2.2 * var(--u));
-            border: calc(0.2 * var(--u)) solid darkgoldenrod;
-            background-color: firebrick;
-            border-radius: calc(2 * var(--u));
-            padding: calc(0.15 * var(--u));
-        }
-
-        .color-palette td {
-            border-radius: 50%;
+        .ctrl-btn {
+            background: #222;
+            color: #fff;
+            border: calc(0.1 * var(--u)) solid #555;
+            border-radius: calc(0.5 * var(--u));
+            width: calc(2.9 * var(--u));
+            height: calc(2.3 * var(--u));
+            font-size: calc(1 * var(--u));
             cursor: pointer;
-            width: 20%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .ctrl-btn:hover {
+            background: darkred;
+            border-color: lawngreen;
+            color: lawngreen;
+            transform: scale(1.08);
+        }
+
+        .ctrl-btn.play-active {
+            background: rgba(124, 252, 0, 0.22);
+            color: lawngreen;
+            border-color: lawngreen;
+            box-shadow: 0 0 calc(0.5 * var(--u)) rgba(124, 252, 0, 0.4);
         }
 
         /* SECOVVV Başlığı */
@@ -262,7 +638,7 @@
             color: transparent;
         }
 
-        /* Sosyal Medya ve İndirme İkonları */
+        /* Google Play, YouTube ve İndirme İkonları */
         .social-icons {
             display: flex;
             gap: calc(0.9 * var(--u));
@@ -283,13 +659,13 @@
             transform: scale(1.15);
         }
 
-        /* 10 Kedi Kartları */
+        /* 10 Kedi Kartları (Sayfa bağlantısı kaldırıldı, tıklanınca miyavlar) */
         .cats-row {
             display: flex;
             flex-wrap: nowrap;
             justify-content: center;
             align-items: flex-start;
-            gap: calc(1.2 * var(--u));
+            gap: calc(1.1 * var(--u));
             width: 100%;
             margin: calc(0.5 * var(--u)) 0 calc(1 * var(--u)) 0;
         }
@@ -298,19 +674,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: calc(8 * var(--u));
+            width: calc(7.8 * var(--u));
             gap: calc(0.5 * var(--u));
             flex-shrink: 0;
         }
 
-        .cat-card a {
-            display: block;
-            width: 100%;
-        }
-
         .enlarge-on-hover {
-            width: calc(8 * var(--u));
-            height: calc(8 * var(--u));
+            width: calc(7.8 * var(--u));
+            height: calc(7.8 * var(--u));
             aspect-ratio: 1 / 1;
             object-fit: cover;
             object-position: center;
@@ -318,11 +689,17 @@
             border: calc(0.4 * var(--u)) solid black;
             border-radius: 50%;
             display: block;
+            cursor: pointer;
         }
 
         .enlarge-on-hover:hover {
             transform: scale(1.1);
             border-color: #B71C1C;
+        }
+
+        .enlarge-on-hover:active {
+            transform: scale(0.96);
+            border-color: lawngreen;
         }
 
         .cat-name-marquee {
@@ -355,49 +732,261 @@
             margin: calc(0.3 * var(--u)) 0;
         }
 
-        /* 3'lü Vitrin: Mustafa.gif - Sabit Slider - Oyun.gif */
+        /* Pro Photo Slider Vitrini */
         .showcase-row {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            justify-items: center;
-            gap: calc(2 * var(--u));
+            gap: calc(0.8 * var(--u));
             width: 100%;
             margin: calc(0.8 * var(--u)) 0 calc(2.5 * var(--u)) 0;
         }
 
-        .side-gif {
-            width: calc(21 * var(--u));
-            height: calc(34 * var(--u));
-            object-fit: cover;
-            border: calc(0.5 * var(--u)) solid seagreen;
-            border-radius: 20%;
-        }
-
         #slider {
             position: relative;
-            width: calc(32 * var(--u));
-            height: calc(36 * var(--u));
+            width: calc(58 * var(--u));
+            height: calc(40 * var(--u));
             overflow: hidden;
-            border-radius: 15%;
+            border-radius: calc(2.5 * var(--u));
             border-color: royalblue greenyellow purple orangered;
             border-style: ridge;
-            border-width: calc(1.4 * var(--u));
-            cursor: default;
-            background-color: #111;
+            border-width: calc(1.2 * var(--u));
+            background-color: #0d0d0d;
+            box-shadow: 0 calc(1 * var(--u)) calc(2.5 * var(--u)) rgba(0, 0, 0, 0.85);
             z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .slider-image {
+        /* Arka plan bulanık yansıma */
+        .slider-bg-blur {
             position: absolute;
-            top: 0;
-            left: 0;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(22px) brightness(0.35);
+            z-index: 1;
+            transition: opacity 0.6s ease-in-out;
+            pointer-events: none;
+        }
+
+        #sliderContent {
+            position: relative;
+            z-index: 2;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: calc(0.8 * var(--u));
+            overflow: hidden;
+        }
+
+        /* Büyük boyutlu JPEG'leri hiç kesmeden otomatik küçültüp çerçeveye sığdıran kural */
+        .slider-image {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: calc(0.8 * var(--u));
+            box-shadow: 0 calc(0.4 * var(--u)) calc(1.2 * var(--u)) rgba(0, 0, 0, 0.7);
             opacity: 0;
-            transition: opacity 1s ease-in-out;
+            transition: opacity 0.6s ease-in-out;
             pointer-events: none;
+        }
+
+        /* Klasörden Toplu Resim Seçme, Oynat/Duraklat ve Süre Seçici Barı */
+        .folder-upload-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: calc(0.8 * var(--u));
+        }
+
+        .folder-upload-label {
+            background: rgba(0, 0, 0, 0.75);
+            color: navajowhite;
+            border: calc(0.12 * var(--u)) solid darkgoldenrod;
+            border-radius: calc(1.5 * var(--u));
+            padding: calc(0.4 * var(--u)) calc(1.2 * var(--u));
+            font-size: calc(1 * var(--u));
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .folder-upload-label:hover {
+            background: darkgoldenrod;
+            color: black;
+        }
+
+        /* Slider Oynat/Duraklat ve Süre Seçici Kontrolleri */
+        .slider-ctrl-btn {
+            background: rgba(15, 15, 15, 0.85);
+            color: lawngreen;
+            border: calc(0.12 * var(--u)) solid lawngreen;
+            border-radius: calc(1.5 * var(--u));
+            padding: calc(0.4 * var(--u)) calc(1.1 * var(--u));
+            font-size: calc(1 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: calc(0.4 * var(--u));
+        }
+
+        .slider-ctrl-btn:hover {
+            background: lawngreen;
+            color: #000;
+            box-shadow: 0 0 calc(0.8 * var(--u)) rgba(124, 252, 0, 0.6);
+        }
+
+        .slider-ctrl-btn.paused {
+            border-color: #ff4d4d;
+            color: #ff4d4d;
+        }
+
+        .slider-ctrl-btn.paused:hover {
+            background: #ff4d4d;
+            color: #fff;
+            box-shadow: 0 0 calc(0.8 * var(--u)) rgba(255, 77, 77, 0.6);
+        }
+
+        .slider-speed-wrapper {
+            display: flex;
+            align-items: center;
+            gap: calc(0.4 * var(--u));
+            background: rgba(15, 15, 15, 0.85);
+            color: navajowhite;
+            border: calc(0.12 * var(--u)) solid darkgoldenrod;
+            border-radius: calc(1.5 * var(--u));
+            padding: calc(0.28 * var(--u)) calc(0.9 * var(--u));
+            font-size: calc(0.95 * var(--u));
+        }
+
+        .slider-speed-select {
+            background: #111;
+            color: lawngreen;
+            border: calc(0.08 * var(--u)) solid #555;
+            border-radius: calc(0.8 * var(--u));
+            padding: calc(0.15 * var(--u)) calc(0.4 * var(--u));
+            font-size: calc(0.95 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Slider Bilgi Çubuğu (Sayaç) */
+        .slider-info-bar {
+            position: absolute;
+            bottom: calc(1 * var(--u));
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            background: rgba(0, 0, 0, 0.78);
+            color: #fff;
+            padding: calc(0.4 * var(--u)) calc(1.2 * var(--u));
+            border-radius: calc(2 * var(--u));
+            font-size: calc(1 * var(--u));
+            font-family: monospace;
+            border: calc(0.1 * var(--u)) solid rgba(255, 255, 255, 0.25);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* Slider İleri / Geri Butonları */
+        .slider-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 6;
+            background: rgba(0, 0, 0, 0.65);
+            color: lawngreen;
+            border: calc(0.15 * var(--u)) solid lawngreen;
+            width: calc(3.2 * var(--u));
+            height: calc(3.2 * var(--u));
+            border-radius: 50%;
+            font-size: calc(1.5 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s, background-color 0.2s, transform 0.2s;
+            user-select: none;
+        }
+
+        #slider:hover .slider-nav-btn {
+            opacity: 1;
+        }
+
+        .slider-nav-btn:hover {
+            background: lawngreen;
+            color: black;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .slider-prev {
+            left: calc(1.2 * var(--u));
+        }
+
+        .slider-next {
+            right: calc(1.2 * var(--u));
+        }
+
+        /* Eksik Fotoğraf Hata Kutusu */
+        .missing-photo-box {
+            position: relative;
+            z-index: 4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(30, 0, 0, 0.9);
+            border: calc(0.25 * var(--u)) dashed #ff3333;
+            border-radius: calc(1.5 * var(--u));
+            padding: calc(2.5 * var(--u));
+            text-align: center;
+            color: #fff;
+            width: 80%;
+            box-shadow: 0 0 calc(2 * var(--u)) rgba(255, 0, 0, 0.4);
+        }
+
+        .missing-photo-icon {
+            font-size: calc(4 * var(--u));
+            margin-bottom: calc(0.8 * var(--u));
+        }
+
+        .missing-photo-title {
+            font-size: calc(1.6 * var(--u));
+            color: #ff4d4d;
+            font-weight: bold;
+            margin-bottom: calc(0.5 * var(--u));
+        }
+
+        .missing-photo-filename {
+            font-family: monospace;
+            font-size: calc(1.8 * var(--u));
+            background: #000;
+            color: lawngreen;
+            padding: calc(0.5 * var(--u)) calc(1.2 * var(--u));
+            border-radius: calc(0.6 * var(--u));
+            border: calc(0.1 * var(--u)) solid lawngreen;
+            margin: calc(0.6 * var(--u)) 0;
+        }
+
+        .missing-photo-hint {
+            font-size: calc(1.1 * var(--u));
+            color: #ccc;
+            margin-top: calc(0.4 * var(--u));
         }
 
         #imageContainer {
@@ -427,7 +1016,7 @@
             color: antiquewhite;
             text-align: center;
             padding: calc(2.5 * var(--u));
-            margin: calc(1.5 * var(--u)) 0;
+            margin: calc(1.2 * var(--u)) 0;
             border-radius: calc(1.2 * var(--u));
             box-shadow: 0 calc(0.3 * var(--u)) calc(1 * var(--u)) rgba(0,0,0,0.6);
         }
@@ -514,8 +1103,8 @@
         footer {
             width: 100%;
             text-align: center;
-            padding: calc(2 * var(--u)) calc(1 * var(--u));
-            margin-top: calc(1.5 * var(--u));
+            padding: calc(1.5 * var(--u)) calc(1 * var(--u));
+            margin-top: calc(1 * var(--u));
         }
 
         footer p {
@@ -526,22 +1115,7 @@
             font-weight: bold;
         }
 
-        /* Kar, Kalp, Bayrak, Paraşüt Butonları ve Efektleri */
-        .effect-btn {
-            border: calc(0.3 * var(--u)) solid black;
-            background-color: rgba(255, 255, 255, 0.7);
-            color: black;
-            padding: calc(0.6 * var(--u)) calc(1.2 * var(--u));
-            font-size: calc(1.3 * var(--u));
-            cursor: pointer;
-            opacity: 0;
-            position: fixed;
-            top: -500px;
-            border-radius: calc(3 * var(--u));
-            z-index: 999;
-            transition: opacity 0.3s;
-        }
-
+        /* Yağmur Efekt Parçacıkları */
         .snowflake, .heartflake, .bursaflake, .parasutflake {
             position: fixed;
             background-size: cover;
@@ -552,154 +1126,198 @@
         .heartflake { width: calc(2.8 * var(--u)); height: calc(2.5 * var(--u)); background-image: url('heart2.png'); }
         .bursaflake { width: calc(7 * var(--u)); height: calc(4.2 * var(--u)); background-image: url('tcbayrak.gif'); border-radius: 25%; }
         .parasutflake { width: calc(5.5 * var(--u)); height: calc(6.8 * var(--u)); background-image: url('parasut2.png'); }
-
-        .parasuflake {
-            position: fixed;
-            width: calc(9 * var(--u));
-            height: calc(12 * var(--u));
-            background: url('parasut.png') no-repeat center center/cover;
-            cursor: pointer;
-            z-index: 999;
-        }
-
-        body.scrollbar-active::-webkit-scrollbar {
-            display: none;
-            visibility: hidden;
-            opacity: 0;
-        }
     </style>
 </head>
 
 <body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
 
+    <!-- NEON FX TRAIL & PAINT KANVAS KATMANLARI -->
     <div id="canvasContainer">
+        <canvas id="staticCanvas"></canvas>
         <canvas id="heartCanvas"></canvas>
-        <script src="alev.js"></script>
     </div>
-
-    <!-- Çözünürlük ve Oyun Skoru -->
-    <div id="resolution-container"></div>
-    <div id="scoreboard">Score: <span id="score">0</span></div>
-    <div id="Level2">Level 2</div>
-    <div id="Level3">Level 3</div>
-    <div id="gameOver">Game Over</div>
-
-    <!-- Efekt Butonları -->
-    <button id="startBtnsnow" class="effect-btn">SnowS</button>
-    <button id="stopBtnsnow" class="effect-btn">SnowE</button>
-    <button id="startBtnheart" class="effect-btn">HeartS</button>
-    <button id="stopBtnheart" class="effect-btn">HeartE</button>
-    <button id="startBtnbursa" class="effect-btn">BursaS</button>
-    <button id="stopBtnbursa" class="effect-btn">BursaE</button>
-    <button id="startBtnparasut" class="effect-btn">ParasutS</button>
-    <button id="stopBtnparasut" class="effect-btn">ParasutE</button>
 
     <div class="page-wrapper">
 
-        <!-- Üst Saat, Tarih ve Gramer Butonu -->
-        <div class="top-bar">
-            <a href="gramer2.html" target="_blank">
-                <input type="button" class="gramer-btn" value="GRAMER">
-            </a>
-            <div id="clock"></div>
+        <!-- NEON FX KONTROL PANELİ -->
+        <div class="top-ui-bar">
+            <div id="masterPowerSwitch" class="switch-wrapper power-switch" onclick="toggleMasterPower()" title="Efekt Sistemini Aç / Kapat">
+                <span id="powerLabel" class="switch-label">⏻ Kapalı</span>
+                <div class="switch-track">
+                    <div class="switch-thumb"></div>
+                </div>
+            </div>
+
+            <div id="fxControls" class="fx-controls disabled">
+                <div class="shape-group">
+                    <button class="shape-btn active" data-mode="heart" onclick="setShapeMode('heart')" title="Kalp Modu">❤️</button>
+                    <button class="shape-btn" data-mode="skull" onclick="setShapeMode('skull')" title="Kurukafa Modu">💀</button>
+                    <button class="shape-btn" data-mode="letterS" onclick="setShapeMode('letterS')" title="Bordo-Mavi S Harfi Modu" style="font-family: 'Courier New', monospace; font-size: calc(1.3 * var(--u));">S</button>
+                    <button class="shape-btn" data-mode="fire" onclick="setShapeMode('fire')" title="Alev Modu">🔥</button>
+                    <button class="shape-btn" data-mode="paw" onclick="setShapeMode('paw')" title="Kedi Patisi Modu">🐾</button>
+                    <button class="shape-btn" data-mode="ts" onclick="setShapeMode('ts')" title="Trabzonspor Arması Modu">TS</button>
+                    <button class="shape-btn" data-mode="matrix" onclick="setShapeMode('matrix')" title="Matrix Digital Rain & Cyber Code Modu">01</button>
+                </div>
+
+                <div id="drawModeSwitch" class="switch-wrapper" onclick="toggleDrawMode()">
+                    <span class="switch-label">✍️ Çizim Modu</span>
+                    <div class="switch-track">
+                        <div class="switch-thumb"></div>
+                    </div>
+                </div>
+                <span id="drawHint" class="hint-badge">Sol Tık: Çiz | Sağ Tık: Durdur</span>
+                <button id="clearBtn" class="clear-btn" onclick="clearCanvasAll()">🗑️ Temizle</button>
+            </div>
+        </div>
+
+        <!-- Sol Üst: Tarih + Açılır Efekt Menüsü -->
+        <div class="effects-menu-container" id="effectsMenuContainer">
             <div id="date"></div>
+            <button class="menu-trigger-btn" id="effectsMenuBtn">
+                <span>✨ Efektler</span>
+                <span id="effectsMenuArrow">▾</span>
+            </button>
+            <div class="menu-dropdown" id="effectsDropdown">
+                <button id="toggleSnowBtn" class="effect-toggle-btn">
+                    <span>❄️ Snow</span>
+                    <span class="status-badge">KAPALI</span>
+                </button>
+                <button id="toggleHeartBtn" class="effect-toggle-btn">
+                    <span>❤️ Heart</span>
+                    <span class="status-badge">KAPALI</span>
+                </button>
+                <button id="toggleBayrakBtn" class="effect-toggle-btn">
+                    <span>🇹🇷 Bayrak</span>
+                    <span class="status-badge">KAPALI</span>
+                </button>
+                <button id="toggleParasutBtn" class="effect-toggle-btn">
+                    <span>🪂 Paraşüt</span>
+                    <span class="status-badge">KAPALI</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sağ Üst: Saat + Açılır Oyunlar Menüsü -->
+        <div class="games-menu-container" id="gamesMenuContainer">
+            <div id="clock"></div>
+            <button class="menu-trigger-btn" id="gamesMenuBtn">
+                <span>🎮 Oyunlar</span>
+                <span id="gamesMenuArrow">▾</span>
+            </button>
+            <div class="menu-dropdown" id="gamesDropdown">
+                <a href="html10parmak.html" target="_blank" class="game-link-btn">
+                    <span>⌨️ 10 Parmak</span>
+                    <span class="game-play-badge">▶</span>
+                </a>
+                <a href="kelimeyibul.html" target="_blank" class="game-link-btn">
+                    <span>🔤 Kelime</span>
+                    <span class="game-play-badge">▶</span>
+                </a>
+                <a href="titanhtml.html" target="_blank" class="game-link-btn">
+                    <span>💰 Milyoner</span>
+                    <span class="game-play-badge">▶</span>
+                </a>
+                <a href="words.html" target="_blank" class="game-link-btn">
+                    <span>📘 Words</span>
+                    <span class="game-play-badge">▶</span>
+                </a>
+                <a href="spacex.html" target="_blank" class="game-link-btn">
+                    <span>🚀 Space X</span>
+                    <span class="game-play-badge">▶</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Özel Gün Kutlama Mesajları -->
+        <div class="top-bar">
             <div id="specialEvents"></div>
         </div>
 
         <!-- Kayan Kedi GIF -->
         <marquee behavior="scroll" scrollamount="20" class="cat-marquee" onmouseover="stopMarquee()" onmouseout="startMarquee()">
-            <a href="kelimeoyun.html" target="_blank">
+            <a href="kelimeyibul.html" target="_blank">
                 <img src="beyazkedi.gif" alt="GIF" id="gifImage" onclick="playAudio('catmiyav.mp3')">
             </a>
         </marquee>
 
         <!-- Üst Kontrol Paneli -->
         <div class="control-grid">
-            <!-- Sol Taraf: İpek, Müzik ve Arka Plan Renkleri -->
             <div class="left-controls">
-                <img src="ipekkucuk.jpg" onclick="myFunctionss()" class="avatar-circle" alt="İpek">
-                <div class="music-and-color">
-                    <div class="music-btns">
-                        <input type="button" class="music-btn" value="Music Box" onclick="playRandomSound();">
-                        <input type="button" class="music-btn" value="Stop Music" onclick="stopMusic();">
+                <img src="ipekkucuk.jpg" onclick="cycleBackground()" class="avatar-circle" alt="İpek" title="Arka Plan Rengini / Temasını Değiştirmek İçin Tıkla">
+                <div class="pro-music-player">
+                    <div class="track-display" id="trackTitleDisplay">🎵 Music Box Hazır</div>
+                    <div class="player-controls">
+                        <button class="ctrl-btn" id="prevTrackBtn" title="Önceki Şarkı">⏮</button>
+                        <button class="ctrl-btn" id="playPauseTrackBtn" title="Oynat / Duraklat">▶</button>
+                        <button class="ctrl-btn" id="stopTrackBtn" title="Durdur">⏹</button>
+                        <button class="ctrl-btn" id="nextTrackBtn" title="Sonraki Şarkı">⏭</button>
+                        <button class="ctrl-btn" id="shuffleTrackBtn" title="Rastgele Şarkı Çal">🔀</button>
                     </div>
-                    <span id="player"></span>
-                    <table class="color-palette">
-                        <tr>
-                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:Khaki;"></td>
-                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:darkgoldenrod;"></td>
-                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:black;"></td>
-                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:skyblue;"></td>
-                            <td onclick="bgChange(this.style.backgroundColor)" style="background-color:antiquewhite;"></td>
-                        </tr>
-                    </table>
                 </div>
             </div>
 
-            <!-- Orta: SECOVVV Başlık -->
             <marquee behavior="slide" scrollamount="7" direction="down" id="hoverMarquee">
                 SECOVVV
             </marquee>
 
-            <!-- Sağ Taraf: Sosyal İkonlar ve Seco -->
             <div class="right-controls">
                 <div class="social-icons">
-                    <a href="https://www.instagram.com/secovvvsecond/" target="_blank" class="instagram-button">
-                        <img src="instagram.png" alt="Instagram Butonu">
+                    <a href="https://play.google.com/store/apps/dev?id=4805356574484137589&hl=tr" target="_blank" class="android-store-button" title="Google Play Store Uygulamalarım">
+                        <img src="adroidsimge.jpg" onerror="this.onerror=null; this.src='androidsimge.jpg';" alt="Google Play Store">
                     </a>
-                    <a href="https://www.youtube.com/channel/UCEWv2IlGKRkzlU6qlrQrrxg" target="_blank" class="youtube-button">
+                    <a href="https://www.youtube.com/channel/UCEWv2IlGKRkzlU6qlrQrrxg" target="_blank" class="youtube-button" title="YouTube Kanalım">
                         <img src="youtube.png" alt="YouTube Butonu">
                     </a>
-                    <a href="https://www.mediafire.com/file/mvokqes8969m9f5/gameover87.exe/file" download target="_blank" class="download-button">
+                    <a href="https://www.mediafire.com/file/mvokqes8969m9f5/gameover87.exe/file" download target="_blank" class="download-button" title="Oyunu İndir">
                         <img src="oyunresim11.jpg" alt="Oyun Resmi">
                     </a>
                 </div>
-               <a href="timelesssifre.html" target="_blank">
-    <img src="secokucuk.jpg" class="avatar-circle" alt="Seco">
-</a>
+                <a href="timelesssifre.html" target="_blank">
+                    <img src="secokucuk.jpg" class="avatar-circle" alt="Seco">
+                </a>
             </div>
         </div>
 
-        <!-- 10 Kedi ve Altlarındaki Kayan İsimler -->
+        <!-- 10 Kedi ve Altlarındaki Kayan İsimler (Linkler kaldırıldı, tıklanınca miyavlar) -->
         <div class="cats-row">
             <div class="cat-card">
-                <a href="leosayfa.html" target="_blank"><img src="Leokucuk.jpg" class="enlarge-on-hover" alt="Leo"></a>
+                <img src="Leokucuk.jpg" class="enlarge-on-hover" alt="Leo" onclick="playAudio('catmiyav.mp3')" title="Leo">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">LEO</marquee>
             </div>
             <div class="cat-card">
-                <a href="sirinsayfa.html" target="_blank"><img src="sirinkucuk.jpg" class="enlarge-on-hover" alt="Şirin"></a>
+                <img src="sirinkucuk.jpg" class="enlarge-on-hover" alt="Şirin" onclick="playAudio('catmiyav.mp3')" title="Şirin">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">ŞİRİN</marquee>
             </div>
             <div class="cat-card">
-                <a href="salemsayfa.html" target="_blank"><img src="salemkucuk.jpg" class="enlarge-on-hover" alt="Salem"></a>
+                <img src="salemkucuk.jpg" class="enlarge-on-hover" alt="Salem" onclick="playAudio('catmiyav.mp3')" title="Salem">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">SALEM</marquee>
             </div>
             <div class="cat-card">
-                <a href="samursayfa.html" target="_blank"><img src="samurkucuk.jpg" class="enlarge-on-hover" alt="Samur"></a>
+                <img src="samurkucuk.jpg" class="enlarge-on-hover" alt="Samur" onclick="playAudio('catmiyav.mp3')" title="Samur">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">SAMUR</marquee>
             </div>
             <div class="cat-card">
-                <a href="zekosayfa.html" target="_blank"><img src="zekokucuk.jpg" class="enlarge-on-hover" alt="Zeko"></a>
+                <img src="zekokucuk.jpg" class="enlarge-on-hover" alt="Zeko" onclick="playAudio('catmiyav.mp3')" title="Zeko">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">ZEKO</marquee>
             </div>
             <div class="cat-card">
-                <a href="elmassayfa.html" target="_blank"><img src="elmaskucuk.jpg" class="enlarge-on-hover" alt="Elmas"></a>
+                <img src="elmaskucuk.jpg" class="enlarge-on-hover" alt="Elmas" onclick="playAudio('catmiyav.mp3')" title="Elmas">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">ELMAS</marquee>
             </div>
             <div class="cat-card">
-                <a href="lunasayfa.html" target="_blank"><img src="beyazkucuk.jpg" class="enlarge-on-hover" alt="Luna"></a>
+                <img src="beyazkucuk.jpg" class="enlarge-on-hover" alt="Luna" onclick="playAudio('catmiyav.mp3')" title="Luna">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">LUNA</marquee>
             </div>
             <div class="cat-card">
-                <a href="lenasayfa.html" target="_blank"><img src="lenakucuk.jpg" class="enlarge-on-hover" alt="Lena"></a>
+                <img src="lenakucuk.jpg" class="enlarge-on-hover" alt="Lena" onclick="playAudio('catmiyav.mp3')" title="Lena">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">LENA</marquee>
             </div>
             <div class="cat-card">
-                <a href="mollysayfa.html" target="_blank"><img src="sidiklikucuk.jpg" class="enlarge-on-hover" alt="Molly"></a>
+                <img src="sidiklikucuk.jpg" class="enlarge-on-hover" alt="Molly" onclick="playAudio('catmiyav.mp3')" title="Molly">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">MOLLY</marquee>
             </div>
             <div class="cat-card">
-                <a href="tatlisayfa.html" target="_blank"><img src="tatlikucuk.jpg" class="enlarge-on-hover" alt="Tatlı"></a>
+                <img src="tatlikucuk.jpg" class="enlarge-on-hover" alt="Tatlı" onclick="playAudio('catmiyav.mp3')" title="Tatlı">
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">TATLI</marquee>
             </div>
         </div>
@@ -712,11 +1330,41 @@
         <!-- Özel Gün Görseli -->
         <div id="imageContainer"></div>
 
-        <!-- Orta 3'lü Vitrin: Ata GIF - Sabit Slider - Oyun GIF -->
+        <!-- Orta Vitrin: Otomatik Sığdırmalı Pro Photo Slider -->
         <div class="showcase-row">
-            <img src="mustafa.gif" class="side-gif" alt="Mustafa Kemal Atatürk">
-            <div id="slider"></div>
-            <img id="oyungif" src="oyun.gif" class="side-gif" alt="Oyun GIF">
+            <div id="slider">
+                <div id="sliderBg" class="slider-bg-blur"></div>
+                <div id="sliderContent"></div>
+                <button class="slider-nav-btn slider-prev" id="prevSlideBtn" title="Önceki Fotoğraf">&#10094;</button>
+                <button class="slider-nav-btn slider-next" id="nextSlideBtn" title="Sonraki Fotoğraf">&#10095;</button>
+                <div class="slider-info-bar" id="sliderInfoBar">Yükleniyor...</div>
+            </div>
+
+            <!-- Slider Kontrol Barı: Oynat/Duraklat, Geçiş Süresi ve Klasörden Resim Seçme -->
+            <div class="folder-upload-bar">
+                <button type="button" id="sliderPlayPauseBtn" class="slider-ctrl-btn" title="Slayt Gösterisini Duraklat / Devam Ettir">
+                    ⏸ Duraklat
+                </button>
+
+                <div class="slider-speed-wrapper" title="Fotoğrafların Ekranda Kalma Süresi">
+                    <span>⏱️ Süre:</span>
+                    <select id="sliderSpeedSelect" class="slider-speed-select">
+                        <option value="1000">1 sn</option>
+                        <option value="2000">2 sn</option>
+                        <option value="3000" selected>3 sn</option>
+                        <option value="4500">4.5 sn</option>
+                        <option value="6000">6 sn</option>
+                        <option value="8000">8 sn</option>
+                        <option value="10000">10 sn</option>
+                        <option value="15000">15 sn</option>
+                    </select>
+                </div>
+
+                <label class="folder-upload-label" title="Kod içine isim yazmadan bilgisayarındaki yüzlerce resmi topluca seçip oynatabilirsin">
+                    📁 Klasörden Çoklu Resim Seç / Ekle
+                    <input type="file" id="localFilesInput" multiple accept="image/*" style="display: none;">
+                </label>
+            </div>
         </div>
 
         <!-- Gençliğe Hitabe -->
@@ -749,9 +1397,7 @@
             <div class="contact-form-container">
                 <div class="contact-form">
                     <h2>İletişim Formu</h2>
-                    <form action="https://formsubmit.co/secovvv@gmail.com" method="POST" onsubmit="return validateForm()">
-                        <input type="hidden" name="_captcha" value="false">
-
+                    <form id="secovvvContactForm" onsubmit="return validateForm(event)">
                         <label for="name">Adınız:</label>
                         <input type="text" id="name" name="name" required>
 
@@ -772,7 +1418,7 @@
 
                         <label for="message">Mesajınız:</label>
                         <textarea id="message" name="message" rows="4" required></textarea>
-                        <button type="submit">Gönder</button>
+                        <button type="button" id="contactSubmitBtn" onclick="validateForm(event)">Gönder</button>
                     </form>
                 </div>
             </div>
@@ -783,26 +1429,20 @@
             <p>&copy; 2023 All rights reserved. | Designed by Secovvv</p>
         </footer>
 
-    </div>
-
-    <!-- TÜM JAVASCRIPT FONKSİYONLARI -->
+    </div><!-- TÜM JAVASCRIPT FONKSİYONLARI -->
     <script>
-        // 1. Çözünürlük ve Hem Pencere Hem Ctrl+Scroll Ölçekleme
+        // 1. Pencere ve Ctrl+Scroll Ölçekleme
         var baseDPR = window.devicePixelRatio || 1;
 
-        function updateResolution() {
-            var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-            var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+        function updateZoomScale() {
             var currentDPR = window.devicePixelRatio || 1;
             var zoomFactor = currentDPR / baseDPR;
-
             document.documentElement.style.setProperty('--z', zoomFactor);
-            document.getElementById('resolution-container').textContent = 'Resolution: ' + width + 'x' + height;
         }
-        updateResolution();
-        window.addEventListener('resize', updateResolution);
+        updateZoomScale();
+        window.addEventListener('resize', updateZoomScale);
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', updateResolution);
+            window.visualViewport.addEventListener('resize', updateZoomScale);
         }
 
         // 2. Saat, Tarih ve Özel Günler
@@ -873,7 +1513,7 @@
         setInterval(updateClock, 1000);
         window.addEventListener('load', updateClock);
 
-        // 3. Kayan Kedi Sesleri
+        // 3. Kayan Kedi ve 10 Kedi Kartı Sesleri
         var timeoutCatMiyav, timeoutTigerRoar;
         function stopMarquee() {
             document.querySelector('.cat-marquee').stop();
@@ -890,38 +1530,176 @@
             audio.play();
         }
 
-        // 4. İpek Resim Tıklama ve Arka Plan Değiştirme (Orijinal Koordinatlarla)
-        function myFunctionss() {
-            document.body.style.background = "none";
-            document.body.style.backgroundImage = "url('blackcatbu.jpg')";
-            document.body.style.backgroundPosition = "52.5% -107%";
-            document.body.style.backgroundAttachment = "fixed";
+        // 4. İpek Resmine Tıkladıkça Sırayla Arka Plan Değiştirme
+        let bgCycleIndex = 0;
+        const backgroundThemes = [
+            // Kedinin gözlerini yuvarlak kedi sırasının üstüne (SECOVVV hizasına) çeker
+            { type: 'image', value: "url('blackcatbu.jpg')", position: "center -43vh", size: "100% auto" },
+            { type: 'color', value: 'Khaki' },
+            { type: 'color', value: 'darkgoldenrod' },
+            { type: 'color', value: 'black' },
+            { type: 'color', value: 'skyblue' },
+            { type: 'color', value: 'antiquewhite' },
+            { type: 'gradient', value: 'linear-gradient(360deg, white, black)', position: "52.5% -131%" }
+        ];
+
+        function cycleBackground() {
+            const theme = backgroundThemes[bgCycleIndex];
+            if (theme.type === 'image') {
+                document.body.style.background = "none";
+                document.body.style.backgroundImage = theme.value;
+                document.body.style.backgroundPosition = theme.position;
+                document.body.style.backgroundSize = theme.size || "cover";
+                document.body.style.backgroundRepeat = "no-repeat";
+                document.body.style.backgroundColor = "#000";
+                document.body.style.backgroundAttachment = "fixed";
+            } else if (theme.type === 'color') {
+                document.body.style.backgroundImage = "none";
+                document.body.style.background = theme.value;
+            } else if (theme.type === 'gradient') {
+                document.body.style.background = theme.value;
+                document.body.style.backgroundAttachment = "fixed";
+                document.body.style.backgroundPosition = theme.position;
+            }
+            bgCycleIndex = (bgCycleIndex + 1) % backgroundThemes.length;
         }
 
-        function bgChange(bg) {
-            document.body.style.background = bg;
+        // 5. PRO MÜZİK ÇALAR (Play / Pause / Stop / İleri / Geri / Rastgele + Klasörden Çoklu MP3 Seçme)
+        let playlist = [
+            "darkness.mp3", "akon.mp3", "Glass Animals.mp3", "chain.mp3",
+            "ozone.mp3", "maroon.mp3", "reason.mp3", "waving Flag.mp3",
+            "Let Me Down Slowly.mp3", "forever.mp3", "Benikendindenkurtar.mp3",
+            "Nothingelsematter.mp3", "senidertetmeler.mp3", "instasamka.mp3"
+        ].map(name => ({ name: name, url: name }));
+
+        let currentTrackIdx = Math.floor(Math.random() * playlist.length);
+        let audioElement = new Audio();
+        let isPlayingMusic = false;
+        let currentAudioObjectUrl = null; // Yerel MP3 seçildiğinde RAM şişmesini önler
+
+        const trackTitleDisplay = document.getElementById('trackTitleDisplay');
+        const playPauseTrackBtn = document.getElementById('playPauseTrackBtn');
+        const stopTrackBtn = document.getElementById('stopTrackBtn');
+        const prevTrackBtn = document.getElementById('prevTrackBtn');
+        const nextTrackBtn = document.getElementById('nextTrackBtn');
+        const shuffleTrackBtn = document.getElementById('shuffleTrackBtn');
+
+        // Müzik çalar kontrollerinin yanına otomatik "📁" (Çoklu MP3 Seç) butonu ekler
+        (function injectLocalMusicPicker() {
+            if (!shuffleTrackBtn || document.getElementById('localMusicInput')) return;
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.id = 'localMusicInput';
+            fileInput.multiple = true;
+            fileInput.accept = 'audio/*,.mp3,.wav,.ogg,.m4a,.flac';
+            fileInput.style.display = 'none';
+
+            const uploadBtn = document.createElement('button');
+            uploadBtn.type = 'button';
+            uploadBtn.className = 'ctrl-btn';
+            uploadBtn.title = 'Bilgisayardan Çoklu MP3 / Müzik Seç ve Çal';
+            uploadBtn.textContent = '📁';
+
+            uploadBtn.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                    const localTracks = [];
+                    for (let i = 0; i < files.length; i++) {
+                        localTracks.push({
+                            name: files[i].name,
+                            file: files[i]
+                        });
+                    }
+                    playlist = localTracks;
+                    loadAndPlayTrack(0); // Seçilen ilk şarkıyı hemen çalmaya başlar
+                }
+            });
+
+            shuffleTrackBtn.parentNode.appendChild(uploadBtn);
+            shuffleTrackBtn.parentNode.appendChild(fileInput);
+        })();
+
+        function formatTrackName(fileName) {
+            return fileName.replace(/\.(mp3|wav|ogg|m4a|flac)$/i, '');
         }
 
-        // 5. Müzik Kutusu
-        var audioElement;
-        function playRandomSound() {
-            stopMusic();
-            var sounds = [
-                "darkness.mp3", "akon.mp3", "Glass Animals.mp3", "chain.mp3",
-                "ozone.mp3", "maroon.mp3", "reason.mp3", "waving Flag.mp3",
-                "Let Me Down Slowly.mp3", "forever.mp3", "Benikendindenkurtar.mp3",
-                "Nothingelsematter.mp3", "senidertetmeler.mp3", "instasamka.mp3"
-            ];
-            var soundFile = sounds[Math.floor(Math.random() * sounds.length)];
-            audioElement = new Audio(soundFile);
-            audioElement.loop = true;
-            audioElement.play();
-        }
-        function stopMusic() {
-            if (audioElement && !audioElement.paused) {
-                audioElement.pause();
+        function updatePlayerUI(stateText) {
+            if (playlist.length === 0) return;
+            const cleanName = formatTrackName(playlist[currentTrackIdx].name);
+            if (isPlayingMusic) {
+                trackTitleDisplay.textContent = `🔊 ${cleanName}`;
+                playPauseTrackBtn.textContent = '⏸';
+                playPauseTrackBtn.classList.add('play-active');
+            } else {
+                trackTitleDisplay.textContent = `${stateText || '⏸'} ${cleanName}`;
+                playPauseTrackBtn.textContent = '▶';
+                playPauseTrackBtn.classList.remove('play-active');
             }
         }
+
+        function loadAndPlayTrack(index) {
+            if (playlist.length === 0) return;
+            if (index < 0) index = playlist.length - 1;
+            if (index >= playlist.length) index = 0;
+            currentTrackIdx = index;
+
+            const item = playlist[currentTrackIdx];
+            if (item.file) {
+                if (currentAudioObjectUrl) {
+                    URL.revokeObjectURL(currentAudioObjectUrl);
+                }
+                currentAudioObjectUrl = URL.createObjectURL(item.file);
+                audioElement.src = currentAudioObjectUrl;
+            } else {
+                audioElement.src = item.url;
+            }
+
+            audioElement.play().then(() => {
+                isPlayingMusic = true;
+                updatePlayerUI();
+            }).catch(() => {
+                isPlayingMusic = false;
+                updatePlayerUI('⚠️');
+            });
+        }
+
+        function togglePlayPause() {
+            if (!audioElement.src) {
+                loadAndPlayTrack(currentTrackIdx);
+                return;
+            }
+            if (audioElement.paused) {
+                audioElement.play();
+                isPlayingMusic = true;
+                updatePlayerUI();
+            } else {
+                audioElement.pause();
+                isPlayingMusic = false;
+                updatePlayerUI('⏸');
+            }
+        }
+
+        function stopMusic() {
+            audioElement.pause();
+            audioElement.currentTime = 0;
+            isPlayingMusic = false;
+            updatePlayerUI('⏹');
+        }
+
+        audioElement.addEventListener('ended', () => {
+            loadAndPlayTrack(currentTrackIdx + 1);
+        });
+
+        playPauseTrackBtn.addEventListener('click', togglePlayPause);
+        stopTrackBtn.addEventListener('click', stopMusic);
+        nextTrackBtn.addEventListener('click', () => loadAndPlayTrack(currentTrackIdx + 1));
+        prevTrackBtn.addEventListener('click', () => loadAndPlayTrack(currentTrackIdx - 1));
+        shuffleTrackBtn.addEventListener('click', () => {
+            const randomIdx = Math.floor(Math.random() * playlist.length);
+            loadAndPlayTrack(randomIdx);
+        });
 
         // 6. Murphy Kanunları
         const murphyQuotes = [
@@ -948,32 +1726,341 @@
         }
         setInterval(updateQuote, 5000);
 
-        // 7. Rastgele Resim Slider (Sabit Panel)
-        const images = [
+        // 7. GITHUB OTOMATİK KLASÖR TARAMALI PRO PHOTO SLIDER (AÇILIŞTA KARIŞIK MOD + 3 SN + PLAY/PAUSE)
+        const GITHUB_SLIDER_FOLDER = 'slider'; 
+        const DEFAULT_GH_USER = 'sechow';
+        const DEFAULT_GH_REPO = 'sechow.github.io';
+
+        const fallbackImages = [
             'leo1.jpg', 'leo2.jpg', 'cicek1.jpg', 'cicek2.jpg', 'salem1.jpg', 'salem2.jpg',
             'karakedi1.jpg', 'mila1.jpg', 'cilli1.jpg', 'cilli2.jpg', 'elmas2.jpg', 'elmas1.jpg',
-            'mollyy1.jpg', 'tatli1.jpg', 'tatli2.jpg', 'tatli3.jpg', 'sirin1.jpg', 'sirin2.jpg',
-            'sirin3.jpg', 'sirin4.jpg', 'sirin5.jpg', 'sirin6.jpg', 'sirin7.jpg', 'lunahtml1.jpg',
-            'lunahtml2.jpg', 'pantido1.jpg', 'samur1.jpg', 'samu3.jpg', 'zekoo1.jpg', 'orhan1.jpg',
+            'mollyy1.jpg', 'tatli1.jpg', 'tatli2.jpg', 'tatli3.jpg', 'tatli4.jpg', 'tatli5.jpg',
+            'tatli6.jpg', 'tatli7.jpg',
+            'sirin1.jpg', 'sirin2.jpg', 'sirin3.jpg', 'sirin4.jpg', 'sirin5.jpg', 'sirin6.jpg',
+            'sirin7.jpg', 'sirin8.jpg', 'sirin9.jpg', 'sirin10.jpg', 'sirin11.jpg', 'sirin12.jpg',
+            'sirin13.jpg', 'sirin14.jpg', 'sirin15.jpg', 'sirin16.jpg', 'sirin17.jpg', 'sirin18.jpg',
+            'sirin19.jpg', 'sirin20.jpg', 'sirin21.jpg', 'sirin22.jpg', 'sirin23.jpg', 'sirin24.jpg',
+            'sirin25.jpg', 'sirin26.jpg', 'sirin27.jpg', 'sirin28.jpg', 'sirin29.jpg', 'sirin30.jpg',
+            'sirin31.jpg',
+            'lunahtml1.jpg', 'lunahtml2.jpg', 'pantido1.jpg',
+            'samur1.jpg', 'samur2.jpg', 'samur3.jpg', 'samur4.jpg', 'samur5.jpg', 'samur6.jpg',
+            'samur7.jpg', 'samur8.jpg',
+            'zekoo1.jpg', 'orhan1.jpg',
             'ipek1.jpg', 'ipek2.jpg', 'ipek3.jpg', 'ipek4.jpg', 'ipek5.jpg', 'ipek6.jpg',
             'ipek7.jpg', 'ipek8.jpg', 'ipek9.jpg', 'ipek10.jpg', 'ipek11.jpg', 'ipek12.jpg',
             'ipek13.jpg', 'ipek14.jpg', 'ipek15.jpg', 'ipek16.jpg', 'ipek17.jpg', 'momcat.jpg',
             'ipekblckat.jpg', 'secoskagan.jpg', '3990.jpg'
-        ];
+        ].map(name => ({ name: name, url: name }));
+
+        let slideItems = [];
+        let localFileList = null;
+        let isLocalMode = false;
+        let activeObjectUrls = [];
+        let slideRequestId = 0;
+
         const sliderContainer = document.getElementById('slider');
-        function changeImage() {
-            const randomImage = images[Math.floor(Math.random() * images.length)];
-            const img = document.createElement('img');
-            img.src = randomImage;
-            img.classList.add('slider-image');
-            sliderContainer.innerHTML = '';
-            sliderContainer.appendChild(img);
-            void img.offsetWidth;
-            img.style.opacity = '1';
-            setTimeout(() => { img.style.opacity = '0'; }, 3500);
+        const sliderContent = document.getElementById('sliderContent');
+        const sliderBg = document.getElementById('sliderBg');
+        const sliderInfoBar = document.getElementById('sliderInfoBar');
+        const prevSlideBtn = document.getElementById('prevSlideBtn');
+        const nextSlideBtn = document.getElementById('nextSlideBtn');
+        const localFilesInput = document.getElementById('localFilesInput');
+        const sliderPlayPauseBtn = document.getElementById('sliderPlayPauseBtn');
+        const sliderSpeedSelect = document.getElementById('sliderSpeedSelect');
+
+        // Arka plan blur efektini GPU'yu dondurmadan üretmek için mini kanvas (64x64)
+        const blurThumbCanvas = document.createElement('canvas');
+        blurThumbCanvas.width = 64;
+        blurThumbCanvas.height = 64;
+        const blurThumbCtx = blurThumbCanvas.getContext('2d');
+
+        let currentSlideIdx = 0;
+        let sliderTimer = null;
+        let isHoverPaused = false;
+        let isManualPaused = false;
+        let isShuffleMode = true;   // Sayfa ilk açıldığında doğrudan Karışık (true) modda başlar
+        let slideIntervalMs = 3000; // Sayfa ilk açıldığında doğrudan 3 saniye (3000 ms) ile başlar
+        if (sliderSpeedSelect) sliderSpeedSelect.value = "3000"; // Kutucuğu otomatik "3 sn" seçili yapar
+
+        // Duraklat butonunun soluna otomatik "Sıralı / Karışık" Switch'ini (Karışık seçili olarak) ekler
+        (function injectOrderSwitch() {
+            if (!sliderPlayPauseBtn || document.getElementById('sliderOrderSwitch')) return;
+            const sw = document.createElement('div');
+            sw.id = 'sliderOrderSwitch';
+            sw.className = 'switch-wrapper active';
+            sw.title = 'Slayt Geçiş Düzenini Seç (Sıralı / Karışık)';
+            sw.style.cssText = 'background: rgba(15, 15, 15, 0.85); border: calc(0.12 * var(--u)) solid darkgoldenrod; border-radius: calc(1.5 * var(--u)); padding: calc(0.28 * var(--u)) calc(0.9 * var(--u));';
+            sw.innerHTML = `
+                <span id="lblSeq" class="switch-label" style="color: #888;">📋 Sıralı</span>
+                <div class="switch-track">
+                    <div class="switch-thumb"></div>
+                </div>
+                <span id="lblShuf" class="switch-label" style="color: lawngreen; text-shadow: 0 0 calc(0.5 * var(--u)) lawngreen;">🔀 Karışık</span>
+            `;
+            sliderPlayPauseBtn.parentNode.insertBefore(sw, sliderPlayPauseBtn);
+
+            sw.addEventListener('click', () => {
+                isShuffleMode = !isShuffleMode;
+                sw.classList.toggle('active', isShuffleMode);
+                const lblSeq = document.getElementById('lblSeq');
+                const lblShuf = document.getElementById('lblShuf');
+                if (isShuffleMode) {
+                    lblSeq.style.color = '#888';
+                    lblSeq.style.textShadow = 'none';
+                    lblShuf.style.color = 'lawngreen';
+                    lblShuf.style.textShadow = '0 0 calc(0.5 * var(--u)) lawngreen';
+                } else {
+                    lblSeq.style.color = 'lawngreen';
+                    lblSeq.style.textShadow = '0 0 calc(0.5 * var(--u)) lawngreen';
+                    lblShuf.style.color = '#888';
+                    lblShuf.style.textShadow = 'none';
+                }
+                updateSliderInfoText();
+            });
+        })();
+
+        function getTotalSlides() {
+            return isLocalMode ? (localFileList ? localFileList.length : 0) : slideItems.length;
         }
-        changeImage();
-        setInterval(changeImage, 5000);
+
+        function getSlideItem(index) {
+            if (isLocalMode) {
+                const file = localFileList[index];
+                return { name: file.name, file: file };
+            }
+            return slideItems[index];
+        }
+
+        function getGitHubRepoDetails() {
+            let user = DEFAULT_GH_USER;
+            let repo = DEFAULT_GH_REPO;
+            const host = window.location.hostname;
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+
+            if (host.endsWith('.github.io')) {
+                user = host.replace('.github.io', '');
+                if (pathParts.length > 0 && !pathParts[0].endsWith('.html')) {
+                    repo = pathParts[0];
+                } else {
+                    repo = `${user}.github.io`;
+                }
+            }
+            return { user, repo };
+        }
+
+        async function loadImagesFromGitHub() {
+            const { user, repo } = getGitHubRepoDetails();
+            const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${GITHUB_SLIDER_FOLDER}`;
+
+            try {
+                sliderInfoBar.textContent = `Yükleniyor...`;
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error('Klasör bulunamadı');
+
+                const files = await response.json();
+                const validExtensions = /\.(jpe?g|png|webp|gif)$/i;
+
+                const githubImages = files
+                    .filter(file => file.type === 'file' && validExtensions.test(file.name))
+                    .map(file => ({
+                        name: file.name,
+                        url: `${GITHUB_SLIDER_FOLDER}/${file.name}`
+                    }));
+
+                if (githubImages.length > 0) {
+                    isLocalMode = false;
+                    slideItems = githubImages;
+                    currentSlideIdx = Math.floor(Math.random() * slideItems.length);
+                    showSlide(currentSlideIdx);
+                    return;
+                }
+            } catch (err) {
+                console.log("GitHub slider klasörü henüz yok veya yerel çalışılıyor, yedek liste yüklendi.");
+            }
+
+            isLocalMode = false;
+            slideItems = fallbackImages;
+            currentSlideIdx = Math.floor(Math.random() * slideItems.length);
+            showSlide(currentSlideIdx);
+        }
+
+        // Resim ismi gösterilmez, sadece fotoğraf sırası / toplam sayı yazar
+        function updateSliderInfoText(isError = false) {
+            const total = getTotalSlides();
+            const modeTag = isShuffleMode ? ' 🔀' : '';
+            const pauseTag = isManualPaused ? ' [⏸ DURAKLATILDI]' : '';
+            if (isError) {
+                sliderInfoBar.textContent = `${currentSlideIdx + 1} / ${total}${modeTag} — ❌ GÖRSEL BULUNAMADI${pauseTag}`;
+            } else {
+                sliderInfoBar.textContent = `${currentSlideIdx + 1} / ${total}${modeTag}${pauseTag}`;
+            }
+        }
+
+        function scheduleNextSlide() {
+            clearTimeout(sliderTimer);
+            if (isManualPaused || isHoverPaused || getTotalSlides() === 0) return;
+            sliderTimer = setTimeout(() => {
+                if (!isManualPaused && !isHoverPaused) {
+                    nextSlide();
+                }
+            }, slideIntervalMs);
+        }
+
+        function showSlide(index) {
+            const total = getTotalSlides();
+            if (total === 0) return;
+            clearTimeout(sliderTimer);
+
+            if (index < 0) index = total - 1;
+            if (index >= total) index = 0;
+            currentSlideIdx = index;
+
+            const item = getSlideItem(currentSlideIdx);
+            updateSliderInfoText(false);
+
+            let imgSrc = item.url;
+            if (item.file) {
+                imgSrc = URL.createObjectURL(item.file);
+                activeObjectUrls.push(imgSrc);
+                while (activeObjectUrls.length > 3) {
+                    URL.revokeObjectURL(activeObjectUrls.shift());
+                }
+            }
+
+            const thisRequestId = ++slideRequestId;
+            const img = new Image();
+            img.decoding = 'async';
+            img.className = 'slider-image';
+            img.alt = '';
+
+            const fadeSec = slideIntervalMs <= 2000 ? 0.15 : 0.45;
+            img.style.transition = `opacity ${fadeSec}s ease-out`;
+
+            img.onload = function() {
+                if (thisRequestId !== slideRequestId) return;
+
+                const renderToScreen = () => {
+                    if (thisRequestId !== slideRequestId) return;
+
+                    try {
+                        blurThumbCtx.drawImage(img, 0, 0, 64, 64);
+                        sliderBg.style.backgroundImage = `url('${blurThumbCanvas.toDataURL('image/jpeg', 0.5)}')`;
+                        sliderBg.style.opacity = '1';
+                    } catch (e) {
+                        sliderBg.style.backgroundImage = `url('${imgSrc}')`;
+                        sliderBg.style.opacity = '1';
+                    }
+
+                    sliderContent.replaceChildren(img);
+                    requestAnimationFrame(() => {
+                        img.style.opacity = '1';
+                    });
+
+                    scheduleNextSlide();
+                };
+
+                if (img.decode) {
+                    img.decode().then(renderToScreen).catch(renderToScreen);
+                } else {
+                    renderToScreen();
+                }
+            };
+
+            img.onerror = function() {
+                if (thisRequestId !== slideRequestId) return;
+                sliderBg.style.backgroundImage = 'none';
+                sliderBg.style.opacity = '0';
+                sliderContent.innerHTML = `
+                    <div class="missing-photo-box">
+                        <div class="missing-photo-icon">⚠️</div>
+                        <div class="missing-photo-title">EKSİK VEYA HATALI DOSYA ADI</div>
+                        <div class="missing-photo-filename">${item.name}</div>
+                        <div class="missing-photo-hint">Bu fotoğraf klasörde bulunamadı. Lütfen dosya adını veya uzantısını (.jpg / .jpeg) kontrol edin.</div>
+                    </div>
+                `;
+                updateSliderInfoText(true);
+                scheduleNextSlide();
+            };
+
+            img.src = imgSrc;
+        }
+
+        function getRandomIndex() {
+            const total = getTotalSlides();
+            if (total <= 1) return 0;
+            let nextIdx = currentSlideIdx;
+            while (nextIdx === currentSlideIdx) {
+                nextIdx = Math.floor(Math.random() * total);
+            }
+            return nextIdx;
+        }
+
+        function nextSlide() {
+            if (isShuffleMode) {
+                showSlide(getRandomIndex());
+            } else {
+                showSlide(currentSlideIdx + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (isShuffleMode) {
+                showSlide(getRandomIndex());
+            } else {
+                showSlide(currentSlideIdx - 1);
+            }
+        }
+
+        // Play / Pause Butonu İşlevi
+        sliderPlayPauseBtn.addEventListener('click', () => {
+            isManualPaused = !isManualPaused;
+            isHoverPaused = false;
+            if (isManualPaused) {
+                clearTimeout(sliderTimer);
+                sliderPlayPauseBtn.innerHTML = '▶ Oynat';
+                sliderPlayPauseBtn.classList.add('paused');
+            } else {
+                sliderPlayPauseBtn.innerHTML = '⏸ Duraklat';
+                sliderPlayPauseBtn.classList.remove('paused');
+                nextSlide();
+            }
+            if (getTotalSlides() > 0) {
+                updateSliderInfoText(false);
+            }
+        });
+
+        // Geçiş Süresi Seçici İşlevi
+        sliderSpeedSelect.addEventListener('change', function(e) {
+            slideIntervalMs = parseInt(this.value, 10) || 3000;
+            isHoverPaused = false;
+            this.blur();
+            if (!isManualPaused) {
+                nextSlide();
+            }
+        });
+
+        nextSlideBtn.addEventListener('click', () => {
+            isHoverPaused = false;
+            nextSlide();
+        });
+
+        prevSlideBtn.addEventListener('click', () => {
+            isHoverPaused = false;
+            prevSlide();
+        });
+
+        // 12.000+ dosyayı sıfır döngü ve sıfır kopyalama ile doğrudan bağlar
+        localFilesInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files.length > 0) {
+                localFileList = e.target.files;
+                isLocalMode = true;
+                isHoverPaused = false;
+                currentSlideIdx = isShuffleMode ? Math.floor(Math.random() * localFileList.length) : 0;
+                showSlide(currentSlideIdx);
+            }
+        });
+
+        loadImagesFromGitHub();
 
         // 8. Klavye Kedi Tıklama Sesleri
         var catAudio = new Audio("catmiyav.mp3");
@@ -991,24 +2078,89 @@
             lastClickTime = currentTime;
         });
 
-        // 9. İletişim Formu Doğrulama
-        function validateForm() {
-            var name = document.getElementById("name").value;
-            var email = document.getElementById("email").value;
-            var continent = document.getElementById("continent").value;
-            var message = document.getElementById("message").value;
+        // 9. İletişim Formu (Doğrudan secovvv@gmail.com Google Script Köprüsü - %100 Garantili)
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXtJ9GC5n95ZZ7J1m_r3YWlqUmXtA_Xw100-2AB1qC7TdZ26s0afpBKU4E31Szh6eV/exec";
+
+        function validateForm(event) {
+            if (event) event.preventDefault();
+
+            var nameEl = document.getElementById("name");
+            var emailEl = document.getElementById("email");
+            var continentEl = document.getElementById("continent");
+            var messageEl = document.getElementById("message");
+            var submitBtn = document.getElementById("contactSubmitBtn") || document.querySelector(".contact-form button");
+
+            var name = nameEl.value.trim();
+            var email = emailEl.value.trim();
+            var continent = continentEl.value;
+            var message = messageEl.value.trim();
+
             if (!name || !email || !continent || !message) {
                 alert("Lütfen tüm alanları doldurunuz.");
                 return false;
             }
-            alert("Form gönderildi!");
-            return true;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "⏳ Gönderiliyor...";
+            submitBtn.style.backgroundColor = "#b36b00";
+
+            var formData = new URLSearchParams();
+            formData.append("name", name);
+            formData.append("email", email);
+            formData.append("continent", continent);
+            formData.append("message", message);
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: formData
+            })
+            .then(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "✅ Mesajınız Gönderildi!";
+                submitBtn.style.backgroundColor = "green";
+                nameEl.value = "";
+                emailEl.value = "";
+                continentEl.selectedIndex = 0;
+                messageEl.value = "";
+                setTimeout(() => {
+                    submitBtn.textContent = "Gönder";
+                    submitBtn.style.backgroundColor = "darkred";
+                }, 4000);
+            })
+            .catch((err) => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Gönder";
+                submitBtn.style.backgroundColor = "darkred";
+                alert("Bağlantı hatası: " + err);
+            });
+
+            return false;
         }
 
-        // 10. Kar, Kalp, Bayrak ve Paraşüt Yağmuru Efektleri
-        const currentMonth = new Date().getMonth() + 1;
-        const currentDay = new Date().getDate();
-        let parasutInterval, bursaInterval, snowInterval, heartInterval;
+        // 10. SOL ÜST (EFEKTLER) VE SAĞ ÜST (OYUNLAR) AÇILIR MENÜ SİSTEMİ
+        const effectsMenuBtn = document.getElementById('effectsMenuBtn');
+        const effectsDropdown = document.getElementById('effectsDropdown');
+        const effectsMenuArrow = document.getElementById('effectsMenuArrow');
+
+        const gamesMenuBtn = document.getElementById('gamesMenuBtn');
+        const gamesDropdown = document.getElementById('gamesDropdown');
+        const gamesMenuArrow = document.getElementById('gamesMenuArrow');
+
+        effectsMenuBtn.addEventListener('click', () => {
+            const isOpen = effectsDropdown.classList.toggle('open');
+            effectsMenuArrow.textContent = isOpen ? '▴' : '▾';
+        });
+
+        gamesMenuBtn.addEventListener('click', () => {
+            const isOpen = gamesDropdown.classList.toggle('open');
+            gamesMenuArrow.textContent = isOpen ? '▴' : '▾';
+        });
+
+        let snowInterval = null;
+        let heartInterval = null;
+        let bayrakInterval = null;
+        let parasutInterval = null;
 
         function createFallingEffect(className) {
             const el = document.createElement('div');
@@ -1023,173 +2175,978 @@
                 const left = parseFloat(el.style.left);
                 el.style.top = (top + speedY) + 'px';
                 el.style.left = (left + speedX) + 'px';
-                if (top > window.innerHeight || left > window.innerWidth || left < 0) {
+                if (top > window.innerHeight || left > window.innerWidth || left < 0 || !document.body.contains(el)) {
                     clearInterval(moveId);
                     el.remove();
                 }
             }, 15);
         }
 
-        function startParasutfall() { clearInterval(parasutInterval); parasutInterval = setInterval(() => createFallingEffect('parasutflake'), 1000); }
-        function stopParasutfall() { clearInterval(parasutInterval); }
-        function startBursafall() { clearInterval(bursaInterval); bursaInterval = setInterval(() => createFallingEffect('bursaflake'), 1000); }
-        function stopBursafall() { clearInterval(bursaInterval); }
-        function startSnowfall() { clearInterval(snowInterval); snowInterval = setInterval(() => createFallingEffect('snowflake'), 1000); }
-        function stopSnowfall() { clearInterval(snowInterval); }
-        function startHeartfall() { clearInterval(heartInterval); heartInterval = setInterval(() => createFallingEffect('heartflake'), 1000); }
-        function stopHeartfall() { clearInterval(heartInterval); }
+        function removeExistingParticles(className) {
+            document.querySelectorAll('.' + className).forEach(el => el.remove());
+        }
 
-        document.getElementById('startBtnheart').addEventListener('click', startHeartfall);
-        document.getElementById('stopBtnheart').addEventListener('click', stopHeartfall);
-        document.getElementById('startBtnbursa').addEventListener('click', startBursafall);
-        document.getElementById('stopBtnbursa').addEventListener('click', stopBursafall);
-        document.getElementById('startBtnparasut').addEventListener('click', startParasutfall);
-        document.getElementById('stopBtnparasut').addEventListener('click', stopParasutfall);
-        document.getElementById('startBtnsnow').addEventListener('click', startSnowfall);
-        document.getElementById('stopBtnsnow').addEventListener('click', stopSnowfall);
-
-        if (currentMonth === 6 && currentDay === 1) startParasutfall();
-        if ((currentMonth === 11 && currentDay === 10) || (currentMonth === 10 && currentDay === 29) || (currentMonth === 8 && currentDay === 30)) startBursafall();
-        if (currentMonth === 1 && currentDay === 1) startSnowfall();
-        if ([2, 3, 5, 6, 7, 10, 11, 12].includes(currentMonth)) {
-            if ((currentMonth === 2 && (currentDay === 14 || currentDay === 7)) ||
-                (currentMonth === 5 && currentDay === 12) ||
-                (currentMonth === 6 && currentDay === 16) ||
-                (currentMonth === 11 && currentDay === 26) ||
-                (currentMonth === 10 && currentDay === 13) ||
-                (currentMonth === 12 && currentDay === 10) ||
-                (currentMonth === 7 && (currentDay === 9 || currentDay === 14)) ||
-                (currentMonth === 3 && currentDay === 5)) {
-                startHeartfall();
+        function updateToggleButtonUI(btnId, isActive) {
+            const btn = document.getElementById(btnId);
+            const badge = btn.querySelector('.status-badge');
+            if (isActive) {
+                btn.classList.add('active');
+                badge.textContent = 'AÇIK';
+            } else {
+                btn.classList.remove('active');
+                badge.textContent = 'KAPALI';
             }
         }
 
-        // 11. Paraşüt Vurma Oyunu
-        const parasuflakes = [];
-        let score = 0;
-        let gameActive = true;
-
-        function spawnGameParasuflake(minSpeed, maxSpeed) {
-            const p = document.createElement('div');
-            p.className = 'parasuflake';
-            document.body.appendChild(p);
-            p.style.left = (Math.random() * Math.max(100, window.innerWidth - 150) + 20) + 'px';
-            p.style.top = '-150px';
-            const speedY = Math.random() * (maxSpeed - minSpeed) + minSpeed;
-            const speedX = (Math.random() - 0.5) * 2;
-
-            p.addEventListener('click', () => {
-                p.remove();
-                const idx = parasuflakes.findIndex(item => item.element === p);
-                if (idx > -1) parasuflakes.splice(idx, 1);
-                new Audio('shoot.mp3').play();
-                increaseScore();
-            });
-            parasuflakes.push({ element: p, speedX, speedY });
-        }
-
-        function increaseScore() {
-            if (!gameActive) return;
-            score++;
-            document.getElementById('score').innerText = score;
-
-            if (score === 3 || score === 9) {
-                new Audio('nextlevel.mp3').play();
-            }
-
-            if (score === 3) {
-                document.getElementById('Level2').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('Level2').style.display = 'none';
-                    for (let i = 0; i < 6; i++) spawnGameParasuflake(1.0, 1.8);
-                }, 2000);
-            } else if (score === 9) {
-                document.getElementById('Level3').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('Level3').style.display = 'none';
-                    for (let i = 0; i < 9; i++) spawnGameParasuflake(1.2, 2.2);
-                }, 2000);
-            } else if (score === 18) {
-                new Audio('finish.mp3').play();
-                showAferinMessage();
-                setButtonsOpacityToOne();
+        function toggleSnow(forceState) {
+            const shouldTurnOn = typeof forceState === 'boolean' ? forceState : !snowInterval;
+            if (shouldTurnOn) {
+                if (!snowInterval) snowInterval = setInterval(() => createFallingEffect('snowflake'), 800);
+                updateToggleButtonUI('toggleSnowBtn', true);
+            } else {
+                clearInterval(snowInterval);
+                snowInterval = null;
+                removeExistingParticles('snowflake');
+                updateToggleButtonUI('toggleSnowBtn', false);
             }
         }
 
-        function setButtonsOpacityToOne() {
-            const positions = [
-                { id: "startBtnsnow", top: "30%", left: "1vw" },
-                { id: "stopBtnsnow", top: "30%", right: "1vw" },
-                { id: "startBtnheart", top: "42%", left: "1vw" },
-                { id: "stopBtnheart", top: "42%", right: "1vw" },
-                { id: "startBtnbursa", top: "54%", left: "1vw" },
-                { id: "stopBtnbursa", top: "54%", right: "1vw" },
-                { id: "startBtnparasut", top: "66%", left: "1vw" },
-                { id: "stopBtnparasut", top: "66%", right: "1vw" }
+        function toggleHeart(forceState) {
+            const shouldTurnOn = typeof forceState === 'boolean' ? forceState : !heartInterval;
+            if (shouldTurnOn) {
+                if (!heartInterval) heartInterval = setInterval(() => createFallingEffect('heartflake'), 800);
+                updateToggleButtonUI('toggleHeartBtn', true);
+            } else {
+                clearInterval(heartInterval);
+                heartInterval = null;
+                removeExistingParticles('heartflake');
+                updateToggleButtonUI('toggleHeartBtn', false);
+            }
+        }
+
+        function toggleBayrak(forceState) {
+            const shouldTurnOn = typeof forceState === 'boolean' ? forceState : !bayrakInterval;
+            if (shouldTurnOn) {
+                if (!bayrakInterval) heartInterval = null; 
+                if (!bayrakInterval) bayrakInterval = setInterval(() => createFallingEffect('bursaflake'), 900);
+                updateToggleButtonUI('toggleBayrakBtn', true);
+            } else {
+                clearInterval(bayrakInterval);
+                bayrakInterval = null;
+                removeExistingParticles('bursaflake');
+                updateToggleButtonUI('toggleBayrakBtn', false);
+            }
+        }
+
+        function toggleParasut(forceState) {
+            const shouldTurnOn = typeof forceState === 'boolean' ? forceState : !parasutInterval;
+            if (shouldTurnOn) {
+                if (!parasutInterval) parasutInterval = setInterval(() => createFallingEffect('parasutflake'), 900);
+                updateToggleButtonUI('toggleParasutBtn', true);
+            } else {
+                clearInterval(parasutInterval);
+                parasutInterval = null;
+                removeExistingParticles('parasutflake');
+                updateToggleButtonUI('toggleParasutBtn', false);
+            }
+        }
+
+        document.getElementById('toggleSnowBtn').addEventListener('click', () => toggleSnow());
+        document.getElementById('toggleHeartBtn').addEventListener('click', () => toggleHeart());
+        document.getElementById('toggleBayrakBtn').addEventListener('click', () => toggleBayrak());
+        document.getElementById('toggleParasutBtn').addEventListener('click', () => toggleParasut());
+
+        // Özel Günlerde Otomatik Başlatma
+        const currentMonth = new Date().getMonth() + 1;
+        const currentDay = new Date().getDate();
+
+        if (currentMonth === 6 && currentDay === 1) toggleParasut(true);
+        if ((currentMonth === 11 && currentDay === 10) || (currentMonth === 10 && currentDay === 29) || (currentMonth === 8 && currentDay === 30)) toggleBayrak(true);
+        if (currentMonth === 1 && currentDay === 1) toggleSnow(true);
+        if ((currentMonth === 2 && (currentDay === 14 || currentDay === 7)) ||
+            (currentMonth === 5 && currentDay === 12) ||
+            (currentMonth === 6 && currentDay === 16) ||
+            (currentMonth === 11 && currentDay === 26) ||
+            (currentMonth === 10 && currentDay === 13) ||
+            (currentMonth === 12 && currentDay === 10) ||
+            (currentMonth === 7 && (currentDay === 9 || currentDay === 14)) ||
+            (currentMonth === 3 && currentDay === 5)) {
+            toggleHeart(true);
+        }
+
+        // =========================================================================
+        // 11. NEON FX TRAIL & PAINT MOTORU (KALP, KURUKAFA, S, ALEV, PATİ, TS, MATRIX)
+        // =========================================================================
+        const staticCanvas = document.getElementById('staticCanvas');
+        const staticCtx = staticCanvas.getContext('2d');
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = staticCanvas.width = window.innerWidth;
+        canvas.height = staticCanvas.height = window.innerHeight;
+
+        let fxEnabled = false;
+        let currentShapeMode = 'heart';
+        let drawModeActive = false;
+        let isDrawingTrail = false;
+        let lastTrailX = null;
+        let lastTrailY = null;
+        let lastMatrixSpawnX = null;
+        let lastMatrixSpawnY = null;
+        let lastMatrixSpawnTime = 0;
+
+        const MAX_ACTIVE_PARTICLES = 520;
+        const particles = [];
+        const matrixStreams = [];
+        const matrixShockwaves = [];
+
+        const palettes = {
+            heart:   ['#FF0055', '#FF1E56', '#FF033E', '#FF5E7E', '#FF2A85', '#FFD700'],
+            skull:   ['#FFFFFF', '#F1F5F9', '#FFD700', '#FFEA00', '#FF1E00', '#DC2626'],
+            letterS: [
+                { fill: '#8C1139', glow: '#D91B5C' },
+                { fill: '#4BBCEB', glow: '#4BBCEB' },
+                { fill: '#6C0B2A', glow: '#B81448' },
+                { fill: '#38BDF8', glow: '#38BDF8' }
+            ],
+            paw:     ['#FF66B2', '#00F2FF', '#FFD700', '#FF2A85', '#39FF14', '#C084FC']
+        };
+
+        const MATRIX_GLYPHS = "01SECOVVVｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ2345789Z:・.=*+-<>¦｜";
+
+        function toggleMasterPower() {
+            fxEnabled = !fxEnabled;
+
+            const powerSwitch = document.getElementById('masterPowerSwitch');
+            const powerLabel = document.getElementById('powerLabel');
+            const fxControls = document.getElementById('fxControls');
+
+            powerSwitch.classList.toggle('active', fxEnabled);
+            powerLabel.textContent = fxEnabled ? '⏻ Açık' : '⏻ Kapalı';
+            fxControls.classList.toggle('disabled', !fxEnabled);
+
+            if (!fxEnabled) {
+                isDrawingTrail = false;
+                lastTrailX = null;
+                lastTrailY = null;
+                particles.length = 0;
+                matrixStreams.length = 0;
+                matrixShockwaves.length = 0;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        const spriteCache = {
+            heart: [],
+            skull: [],
+            letterS: [],
+            fire: [],
+            paw: [],
+            ts: [],
+            matrixHead: [],
+            matrixBright: [],
+            matrixDim: []
+        };
+
+        function createFlameSprite(coreCol, midCol, outerCol, glowCol) {
+            const size = 64;
+            const half = size / 2;
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const g = c.getContext('2d');
+            g.translate(half, half);
+
+            g.shadowColor = glowCol;
+            g.shadowBlur = 13;
+
+            const outerGrad = g.createLinearGradient(0, -16, 0, 15);
+            outerGrad.addColorStop(0, midCol);
+            outerGrad.addColorStop(0.58, outerCol);
+            outerGrad.addColorStop(1, glowCol);
+
+            g.fillStyle = outerGrad;
+            g.beginPath();
+            g.moveTo(2, -16);
+            g.bezierCurveTo(11, -7, 15, 3, 9, 11);
+            g.quadraticCurveTo(13, 4, 11, -2);
+            g.bezierCurveTo(17, 5, 11, 15, 0, 15);
+            g.bezierCurveTo(-11, 15, -16, 4, -9, -5);
+            g.quadraticCurveTo(-11, 2, -7, 7);
+            g.bezierCurveTo(-10, -2, -5, -10, 2, -16);
+            g.closePath();
+            g.fill();
+
+            g.shadowBlur = 0;
+            const innerGrad = g.createLinearGradient(0, -10, 0, 13);
+            innerGrad.addColorStop(0, coreCol);
+            innerGrad.addColorStop(0.65, midCol);
+            innerGrad.addColorStop(1, outerCol);
+
+            g.fillStyle = innerGrad;
+            g.beginPath();
+            g.moveTo(1, -9);
+            g.bezierCurveTo(8, -1, 8, 9, 0, 13);
+            g.bezierCurveTo(-8, 9, -7, 0, 1, -9);
+            g.closePath();
+            g.fill();
+
+            return c;
+        }
+
+        function createCatPawSprite(color) {
+            const size = 64;
+            const half = size / 2;
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const g = c.getContext('2d');
+            g.translate(half, half);
+
+            g.shadowColor = color;
+            g.shadowBlur = 12;
+            g.fillStyle = color;
+
+            g.beginPath();
+            g.moveTo(0, -1.5);
+            g.bezierCurveTo(6.5, -1.5, 11.5, 3.5, 10.5, 9.5);
+            g.bezierCurveTo(9.8, 13.5, 5.0, 14.5, 2.2, 12.5);
+            g.quadraticCurveTo(0, 11.2, -2.2, 12.5);
+            g.bezierCurveTo(-5.0, 14.5, -9.8, 13.5, -10.5, 9.5);
+            g.bezierCurveTo(-11.5, 3.5, -6.5, -1.5, 0, -1.5);
+            g.closePath();
+            g.fill();
+
+            const toes = [
+                { x: -11.2, y: -3.2, rx: 3.3, ry: 4.8, rot: -0.42 },
+                { x: -4.2,  y: -9.2, rx: 3.5, ry: 5.2, rot: -0.14 },
+                { x: 4.2,   y: -9.2, rx: 3.5, ry: 5.2, rot: 0.14 },
+                { x: 11.2,  y: -3.2, rx: 3.3, ry: 4.8, rot: 0.42 }
             ];
-            positions.forEach(pos => {
-                const btn = document.getElementById(pos.id);
-                if (btn) {
-                    btn.style.opacity = '1';
-                    btn.style.top = pos.top;
-                    if (pos.left) btn.style.left = pos.left;
-                    if (pos.right) btn.style.right = pos.right;
-                }
+
+            toes.forEach(t => {
+                g.save();
+                g.translate(t.x, t.y);
+                g.rotate(t.rot);
+                g.beginPath();
+                g.ellipse(0, 0, t.rx, t.ry, 0, 0, Math.PI * 2);
+                g.fill();
+                g.restore();
             });
-            setTimeout(() => {
-                positions.forEach(pos => {
-                    const btn = document.getElementById(pos.id);
-                    if (btn) {
-                        btn.style.opacity = '0';
-                        btn.style.top = '-500px';
-                    }
-                });
-            }, 300000);
+
+            return c;
         }
 
-        function showAferinMessage() {
-            const msg = document.createElement('div');
-            msg.textContent = 'TEBRİKLER';
-            msg.style.position = 'fixed';
-            msg.style.top = 'calc(3.8 * var(--u))';
-            msg.style.left = 'calc(1.2 * var(--u))';
-            msg.style.fontSize = 'calc(2.2 * var(--u))';
-            msg.style.color = 'lawngreen';
-            msg.style.zIndex = '1000';
-            document.body.appendChild(msg);
+        function createVectorTSCrestSprite(glowCol) {
+            const size = 64;
+            const half = size / 2;
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const g = c.getContext('2d');
+            g.translate(half, half + 3);
+
+            g.save();
+            g.shadowColor = glowCol;
+            g.shadowBlur = 10;
+            g.fillStyle = '#5B0B23';
+            g.strokeStyle = '#4BBCEB';
+            g.lineWidth = 1.2;
+
+            g.beginPath();
+            g.moveTo(-14, -12);
+            g.bezierCurveTo(-7, -18, 0, -15, 4, -12);
+            g.bezierCurveTo(8, -9, 11, -9, 14, -11);
+            g.lineTo(14, 4);
+            g.bezierCurveTo(14, 15, 7, 21, 0, 21);
+            g.bezierCurveTo(-7, 21, -14, 15, -14, 4);
+            g.closePath();
+            g.fill();
+            g.stroke();
+            g.restore();
+
+            g.save();
+            g.fillStyle = '#D9A441';
+            g.shadowColor = '#FFD700';
+            g.shadowBlur = 6;
+            g.beginPath();
+            const starY = -22;
+            for (let i = 0; i < 5; i++) {
+                g.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * 4.5, starY - Math.sin((18 + i * 72) * Math.PI / 180) * 4.5);
+                g.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * 1.9, starY - Math.sin((54 + i * 72) * Math.PI / 180) * 1.9);
+            }
+            g.closePath();
+            g.fill();
+            g.restore();
+
+            g.save();
+            g.fillStyle = '#FFFFFF';
+            g.beginPath();
+            g.arc(0, -8.5, 3.3, 0, Math.PI * 2);
+            g.fill();
+            g.strokeStyle = '#5B0B23';
+            g.lineWidth = 0.6;
+            g.beginPath();
+            g.arc(0, -8.5, 2.0, 0.2, 2.5);
+            g.moveTo(-2.5, -9.5);
+            g.lineTo(2.5, -7.5);
+            g.stroke();
+            g.restore();
+
+            g.save();
+            g.strokeStyle = '#5EC2EC';
+            g.lineWidth = 3.2;
+            g.lineCap = 'round';
+            g.lineJoin = 'round';
+
+            g.beginPath();
+            g.moveTo(-12.5, -1.5);
+            g.bezierCurveTo(-5, -5, 4, -1, 12.5, -4);
+            g.stroke();
+
+            g.beginPath();
+            g.moveTo(2, -2.5);
+            g.bezierCurveTo(-9, -1, -11, 14, 0, 16.5);
+            g.bezierCurveTo(10, 16.5, 11, 5, 3, 5);
+            g.bezierCurveTo(-1.5, 5, -1.5, 1.5, 4, 1.5);
+            g.stroke();
+            g.restore();
+
+            g.fillStyle = '#FFFFFF';
+            g.font = 'bold 4.8px "Segoe UI", Arial, sans-serif';
+            g.textAlign = 'center';
+            g.fillText('1967', 0, 15.2);
+
+            return c;
         }
 
-        function stopGame() {
-            gameActive = false;
-            parasuflakes.forEach(p => p.element.remove());
-            parasuflakes.length = 0;
+        function createMatrixGlyphSprite(char, fillCol, glowCol, blurAmt) {
+            const size = 54;
+            const half = size / 2;
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const g = c.getContext('2d');
+            g.translate(half, half);
+            g.font = '900 28px "Courier New", Consolas, monospace';
+            g.textAlign = 'center';
+            g.textBaseline = 'middle';
+
+            g.shadowColor = glowCol;
+            g.shadowBlur = blurAmt;
+            g.fillStyle = fillCol;
+            g.fillText(char, 0, 1);
+
+            g.shadowBlur = blurAmt * 0.45;
+            g.fillText(char, 0, 1);
+
+            return c;
         }
 
-        function updateParasuflakes() {
-            if (gameActive) {
-                for (let i = parasuflakes.length - 1; i >= 0; i--) {
-                    const p = parasuflakes[i];
-                    const currentTop = parseFloat(p.element.style.top);
-                    const currentLeft = parseFloat(p.element.style.left);
+        function buildSpriteCache() {
+            const size = 64;
+            const half = size / 2;
 
-                    if (currentTop > window.innerHeight) {
-                        document.getElementById('gameOver').style.display = 'block';
-                        new Audio('gameovers.mp3').play();
-                        stopGame();
-                        break;
-                    } else {
-                        let nextLeft = currentLeft + p.speedX;
-                        if (nextLeft < 10 || nextLeft > window.innerWidth - 100) p.speedX *= -1;
-                        p.element.style.top = (currentTop + p.speedY) + 'px';
-                        p.element.style.left = (currentLeft + p.speedX) + 'px';
+            palettes.heart.forEach(color => {
+                const c = document.createElement('canvas');
+                c.width = c.height = size;
+                const g = c.getContext('2d');
+                const s = 12;
+                g.translate(half, half);
+                g.shadowColor = color;
+                g.shadowBlur = 12;
+                g.fillStyle = color;
+                g.beginPath();
+                g.moveTo(0, -s * 0.4);
+                g.bezierCurveTo(s * 0.8, -s * 1.3, s * 1.9, -s * 0.1, 0, s * 1.2);
+                g.bezierCurveTo(-s * 1.9, -s * 0.1, -s * 0.8, -s * 1.3, 0, -s * 0.4);
+                g.closePath();
+                g.fill();
+                spriteCache.heart.push(c);
+            });
+
+            palettes.skull.forEach(color => {
+                const c = document.createElement('canvas');
+                c.width = c.height = size;
+                const g = c.getContext('2d');
+                g.translate(half, half);
+                g.shadowColor = color;
+                g.shadowBlur = 13;
+                g.fillStyle = color;
+
+                g.beginPath();
+                g.arc(0, -3, 12, Math.PI, 0, false);
+                g.bezierCurveTo(12, 6, 7, 9, 6, 12);
+                g.lineTo(6, 16);
+                g.lineTo(-6, 16);
+                g.lineTo(-6, 12);
+                g.bezierCurveTo(-7, 9, -12, 6, -12, -3);
+                g.closePath();
+                g.fill();
+
+                g.globalCompositeOperation = 'destination-out';
+                g.shadowBlur = 0;
+                g.beginPath();
+                g.arc(-4.5, -2, 3.2, 0, Math.PI * 2);
+                g.arc(4.5, -2, 3.2, 0, Math.PI * 2);
+                g.fill();
+
+                g.beginPath();
+                g.moveTo(0, 2);
+                g.lineTo(-2, 6);
+                g.lineTo(2, 6);
+                g.closePath();
+                g.fill();
+
+                g.lineWidth = 1.4;
+                g.beginPath();
+                g.moveTo(-3, 11); g.lineTo(-3, 16);
+                g.moveTo(0, 11);  g.lineTo(0, 16);
+                g.moveTo(3, 11);  g.lineTo(3, 16);
+                g.stroke();
+
+                spriteCache.skull.push(c);
+            });
+
+            palettes.letterS.forEach(item => {
+                const c = document.createElement('canvas');
+                c.width = c.height = size;
+                const g = c.getContext('2d');
+                g.translate(half, half);
+                g.shadowColor = item.glow;
+                g.shadowBlur = 13;
+                g.fillStyle = item.fill;
+                g.font = '900 28px "Segoe UI", Arial, sans-serif';
+                g.textAlign = 'center';
+                g.textBaseline = 'middle';
+                g.fillText('S', 0, 1);
+                spriteCache.letterS.push(c);
+            });
+
+            spriteCache.fire.push(createFlameSprite('#FFF59D', '#FFD600', '#FF8F00', '#FFB300'));
+            spriteCache.fire.push(createFlameSprite('#FFE066', '#FF9E00', '#FF5500', '#FF7700'));
+            spriteCache.fire.push(createFlameSprite('#FFB700', '#FF5500', '#D91E00', '#FF3300'));
+            spriteCache.fire.push(createFlameSprite('#FF7700', '#CC2200', '#850A00', '#CC1100'));
+
+            palettes.paw.forEach(color => {
+                spriteCache.paw.push(createCatPawSprite(color));
+            });
+
+            spriteCache.ts.push(createVectorTSCrestSprite('#4BBCEB'));
+            spriteCache.ts.push(createVectorTSCrestSprite('#D91B5C'));
+
+            const tsImg = new Image();
+            tsImg.onload = () => {
+                if (tsImg.naturalWidth > 0) {
+                    spriteCache.ts.length = 0;
+                    ['#4BBCEB', '#D91B5C'].forEach(glow => {
+                        const c = document.createElement('canvas');
+                        c.width = c.height = size;
+                        const g = c.getContext('2d');
+                        g.translate(half, half);
+                        g.shadowColor = glow;
+                        g.shadowBlur = 10;
+                        g.drawImage(tsImg, -18, -24, 36, 48);
+                        spriteCache.ts.push(c);
+                    });
+                }
+            };
+            tsImg.src = 'TrabzonsporAmblemi.png';
+
+            for (let i = 0; i < MATRIX_GLYPHS.length; i++) {
+                const ch = MATRIX_GLYPHS[i];
+                spriteCache.matrixHead.push(createMatrixGlyphSprite(ch, '#FFFFFF', '#00FF41', 16));
+                spriteCache.matrixBright.push(createMatrixGlyphSprite(ch, '#39FF14', '#00FF41', 12));
+                spriteCache.matrixDim.push(createMatrixGlyphSprite(ch, '#00D639', '#008F11', 8));
+            }
+        }
+
+        buildSpriteCache();
+
+        function getRandomSprite(mode) {
+            const list = spriteCache[mode] || spriteCache.heart;
+            return list[Math.floor(Math.random() * list.length)];
+        }
+
+        function randomGlyphIndex() {
+            return Math.floor(Math.random() * MATRIX_GLYPHS.length);
+        }
+
+        function setShapeMode(mode) {
+            if (!fxEnabled) return;
+            currentShapeMode = mode;
+            document.querySelectorAll('.shape-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+        }
+
+        function toggleDrawMode() {
+            if (!fxEnabled) return;
+            drawModeActive = !drawModeActive;
+            isDrawingTrail = false;
+            lastTrailX = null;
+            lastTrailY = null;
+
+            document.getElementById('drawModeSwitch').classList.toggle('active', drawModeActive);
+            document.getElementById('drawHint').classList.toggle('visible', drawModeActive);
+            document.getElementById('clearBtn').classList.toggle('visible', drawModeActive);
+        }
+
+        function clearCanvasAll() {
+            particles.length = 0;
+            matrixStreams.length = 0;
+            matrixShockwaves.length = 0;
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            staticCtx.clearRect(0, 0, staticCanvas.width, staticCanvas.height);
+            isDrawingTrail = false;
+            lastTrailX = null;
+            lastTrailY = null;
+        }
+
+        class MatrixCodeStream {
+            constructor(x, y, isBurstStream = false) {
+                this.depthScale = isBurstStream ? (0.85 + Math.random() * 0.35) : (0.82 + Math.random() * 0.35);
+                this.spacing = 24 * this.depthScale;
+                this.x = x + (Math.random() - 0.5) * 16;
+                this.y = y;
+
+                this.length = isBurstStream
+                    ? (Math.floor(Math.random() * 6) + 10)
+                    : (Math.floor(Math.random() * 6) + 9);
+
+                this.glyphs = [];
+                for (let i = 0; i < this.length; i++) {
+                    this.glyphs.push(randomGlyphIndex());
+                }
+
+                this.speedY = (Math.random() * 1.35 + 1.25) * this.depthScale;
+                this.speedX = isBurstStream ? ((Math.random() - 0.5) * 2.8) : 0;
+                this.maxLifetime = isBurstStream ? (210 + Math.random() * 70) : (195 + Math.random() * 75);
+                this.lifetime = this.maxLifetime;
+                this.tick = 0;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedX *= 0.95;
+                this.lifetime -= 1;
+                this.tick++;
+
+                if (this.tick % 4 === 0) {
+                    const mutateIdx = Math.floor(Math.random() * this.length);
+                    this.glyphs[mutateIdx] = randomGlyphIndex();
+                    if (Math.random() < 0.45) {
+                        this.glyphs[0] = randomGlyphIndex();
                     }
                 }
             }
-            requestAnimationFrame(updateParasuflakes);
+
+            draw() {
+                if (this.lifetime <= 0) return;
+
+                const lifeProgress = this.lifetime / this.maxLifetime;
+                const lifeAlpha = lifeProgress > 0.25 ? 1.0 : (lifeProgress / 0.25);
+
+                const drawSize = 50 * this.depthScale;
+                const halfSize = drawSize / 2;
+
+                ctx.save();
+                for (let i = 0; i < this.length; i++) {
+                    const charY = this.y - i * this.spacing;
+                    if (charY < -40 || charY > canvas.height + 40) continue;
+
+                    const gIdx = this.glyphs[i];
+                    const tailFade = Math.pow(1 - (i / (this.length + 2)), 0.6);
+                    ctx.globalAlpha = lifeAlpha * tailFade;
+
+                    let sprite;
+                    if (i === 0) {
+                        sprite = spriteCache.matrixHead[gIdx];
+                    } else if (i <= 4) {
+                        sprite = spriteCache.matrixBright[gIdx];
+                    } else {
+                        sprite = spriteCache.matrixDim[gIdx];
+                    }
+
+                    ctx.drawImage(sprite, this.x - halfSize, charY - halfSize, drawSize, drawSize);
+                }
+                ctx.restore();
+            }
         }
 
-        for (let i = 0; i < 3; i++) spawnGameParasuflake(0.8, 1.5);
-        updateParasuflakes();
+        class MatrixShockwave {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 10;
+                this.maxRadius = 185;
+                this.alpha = 1;
+            }
+            update() {
+                this.radius += (this.maxRadius - this.radius) * 0.12 + 1.5;
+                this.alpha -= 0.024;
+            }
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.strokeStyle = '#39FF14';
+                ctx.shadowColor = '#00FF41';
+                ctx.shadowBlur = 16;
+                ctx.lineWidth = 2.6;
+                ctx.setLineDash([14, 8]);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        function stampPermanentShape(x, y) {
+            staticCtx.save();
+
+            if (currentShapeMode === 'matrix') {
+                if (lastTrailX !== null && lastTrailY !== null) {
+                    staticCtx.save();
+                    staticCtx.strokeStyle = 'rgba(57, 255, 20, 0.55)';
+                    staticCtx.shadowColor = '#00FF41';
+                    staticCtx.shadowBlur = 10;
+                    staticCtx.lineWidth = 2.5;
+                    staticCtx.beginPath();
+                    staticCtx.moveTo(lastTrailX, lastTrailY);
+                    staticCtx.lineTo(x, y);
+                    staticCtx.stroke();
+                    staticCtx.restore();
+                }
+
+                const gIdx = randomGlyphIndex();
+                const isLead = Math.random() < 0.4;
+                const sprite = isLead ? spriteCache.matrixHead[gIdx] : spriteCache.matrixBright[gIdx];
+                const scale = 0.88 + Math.random() * 0.2;
+
+                staticCtx.translate(x, y);
+                staticCtx.scale(scale, scale);
+                staticCtx.drawImage(sprite, -27, -27);
+                staticCtx.restore();
+
+                if (Math.random() < 0.32 && matrixStreams.length < 110) {
+                    matrixStreams.push(new MatrixCodeStream(x, y + 14, false));
+                }
+                return;
+            }
+
+            const sprite = (currentShapeMode === 'fire')
+                ? spriteCache.fire[Math.floor(Math.random() * 2)]
+                : getRandomSprite(currentShapeMode);
+
+            const scale = (currentShapeMode === 'ts') ? (0.88 + Math.random() * 0.22) : (0.75 + Math.random() * 0.25);
+            const rot = (Math.random() - 0.5) * 0.25;
+            staticCtx.translate(x, y);
+            staticCtx.rotate(rot);
+            staticCtx.scale(scale, scale);
+            staticCtx.drawImage(sprite, -32, -32);
+            staticCtx.restore();
+        }
+
+        function addPermanentTrailPoint(x, y) {
+            if (lastTrailX === null || lastTrailY === null) {
+                stampPermanentShape(x, y);
+                lastTrailX = x;
+                lastTrailY = y;
+                return;
+            }
+
+            const dist = Math.hypot(x - lastTrailX, y - lastTrailY);
+            const step = currentShapeMode === 'matrix' ? 18 : 11;
+
+            if (dist >= step) {
+                const steps = Math.floor(dist / step);
+                for (let i = 1; i <= steps; i++) {
+                    const ratio = i / steps;
+                    const ix = lastTrailX + (x - lastTrailX) * ratio;
+                    const iy = lastTrailY + (y - lastTrailY) * ratio;
+                    stampPermanentShape(ix, iy);
+                }
+                lastTrailX = x;
+                lastTrailY = y;
+            }
+        }
+
+        class Particle {
+            constructor(x, y, isBurst = false, shapeType = 'heart') {
+                this.x = x;
+                this.y = y;
+                this.shapeType = shapeType;
+
+                if (shapeType === 'matrix') {
+                    this.glyphIdx = randomGlyphIndex();
+                    this.isHeadGlyph = Math.random() < 0.45;
+                    this.initialScale = Math.random() * 0.35 + 0.85;
+                    this.maxLifetime = 115 + Math.random() * 55;
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 5.5 + 1.5;
+                    this.speedX = Math.cos(angle) * speed;
+                    this.speedY = Math.sin(angle) * speed;
+                    this.rotation = 0;
+                    this.rotationSpeed = 0;
+                    this.wobbleSpeed = 0;
+                } else {
+                    this.sprite = getRandomSprite(shapeType);
+                    const sizeBoost = (shapeType === 'ts') ? 1.2 : 1.0;
+                    this.initialScale = (isBurst ? (Math.random() * 0.55 + 0.55) : (Math.random() * 0.45 + 0.45)) * sizeBoost;
+                    this.maxLifetime = isBurst ? (90 + Math.random() * 25) : (78 + Math.random() * 18);
+
+                    if (isBurst) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 4.8 + 1.2;
+                        this.speedX = Math.cos(angle) * speed;
+                        this.speedY = Math.sin(angle) * speed;
+                    } else {
+                        this.speedX = (Math.random() - 0.5) * 2.0;
+                        this.speedY = (Math.random() - 0.7) * 2.0;
+                    }
+                    this.rotation = (Math.random() - 0.5) * 0.4;
+                    this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+                    this.wobbleSpeed = Math.random() * 0.08 + 0.03;
+                }
+
+                this.scale = this.initialScale;
+                this.lifetime = this.maxLifetime;
+                this.wobble = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.wobble += this.wobbleSpeed;
+
+                if (this.shapeType === 'matrix') {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.speedX *= 0.95;
+                    this.speedY = this.speedY * 0.95 + 0.12;
+                    if (Math.random() < 0.2) {
+                        this.glyphIdx = randomGlyphIndex();
+                    }
+                } else {
+                    this.x += this.speedX + Math.sin(this.wobble) * 0.35;
+                    this.y += this.speedY;
+                    this.rotation += this.rotationSpeed;
+                    this.speedX *= 0.985;
+                    this.speedY *= 0.985;
+                }
+
+                this.lifetime -= 1;
+                const lifeRatio = Math.max(0, this.lifetime / this.maxLifetime);
+                this.scale = this.shapeType === 'matrix'
+                    ? this.initialScale
+                    : this.initialScale * (0.25 + lifeRatio * 0.75);
+            }
+
+            draw() {
+                if (this.lifetime <= 0) return;
+                const lifeRatio = this.lifetime / this.maxLifetime;
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                if (this.shapeType === 'matrix') {
+                    const sprite = this.isHeadGlyph
+                        ? spriteCache.matrixHead[this.glyphIdx]
+                        : spriteCache.matrixBright[this.glyphIdx];
+                    ctx.scale(this.scale, this.scale);
+                    ctx.globalAlpha = lifeRatio > 0.3 ? 1.0 : (lifeRatio / 0.3);
+                    ctx.drawImage(sprite, -27, -27);
+                } else if (this.shapeType === 'fire') {
+                    let fireStage = 0;
+                    if (lifeRatio < 0.25) fireStage = 3;
+                    else if (lifeRatio < 0.50) fireStage = 2;
+                    else if (lifeRatio < 0.75) fireStage = 1;
+
+                    ctx.rotate(this.rotation);
+                    ctx.scale(this.scale, this.scale);
+                    ctx.globalAlpha = Math.max(0, Math.min(1, lifeRatio * 1.35));
+                    ctx.drawImage(spriteCache.fire[fireStage], -32, -32);
+                } else {
+                    ctx.rotate(this.rotation);
+                    ctx.scale(this.scale, this.scale);
+                    ctx.globalAlpha = Math.max(0, Math.min(1, lifeRatio * 1.35));
+                    ctx.drawImage(this.sprite, -32, -32);
+                }
+
+                ctx.restore();
+            }
+        }
+
+        function createParticles(x, y, count, isBurst = false) {
+            if (!fxEnabled) return;
+
+            if (currentShapeMode === 'matrix') {
+                if (isBurst) {
+                    matrixShockwaves.push(new MatrixShockwave(x, y));
+                    for (let s = 0; s < 9; s++) {
+                        if (matrixStreams.length >= 120) matrixStreams.shift();
+                        matrixStreams.push(new MatrixCodeStream(x + (s - 4) * 24, y, true));
+                    }
+                    for (let i = 0; i < 24; i++) {
+                        if (particles.length >= MAX_ACTIVE_PARTICLES) particles.shift();
+                        particles.push(new Particle(x, y, true, 'matrix'));
+                    }
+                } else {
+                    const now = performance.now();
+                    const dist = (lastMatrixSpawnX === null) ? 999 : Math.hypot(x - lastMatrixSpawnX, y - lastMatrixSpawnY);
+                    if (dist >= 20 || now - lastMatrixSpawnTime > 55) {
+                        lastMatrixSpawnX = x;
+                        lastMatrixSpawnY = y;
+                        lastMatrixSpawnTime = now;
+                        if (matrixStreams.length >= 120) matrixStreams.shift();
+                        matrixStreams.push(new MatrixCodeStream(x, y, false));
+                    }
+                }
+                return;
+            }
+
+            for (let i = 0; i < count; i++) {
+                if (particles.length >= MAX_ACTIVE_PARTICLES) {
+                    particles.shift();
+                }
+                particles.push(new Particle(x, y, isBurst, currentShapeMode));
+            }
+        }
+
+        function animateParticles() {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (fxEnabled) {
+                for (let i = 0; i < matrixStreams.length; i++) {
+                    const stream = matrixStreams[i];
+                    stream.update();
+                    stream.draw();
+
+                    if (stream.lifetime <= 0) {
+                        matrixStreams[i] = matrixStreams[matrixStreams.length - 1];
+                        matrixStreams.pop();
+                        i--;
+                    }
+                }
+
+                for (let i = 0; i < matrixShockwaves.length; i++) {
+                    const sw = matrixShockwaves[i];
+                    sw.update();
+                    sw.draw();
+                    if (sw.alpha <= 0) {
+                        matrixShockwaves.splice(i, 1);
+                        i--;
+                    }
+                }
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.update();
+                    p.draw();
+
+                    if (p.lifetime <= 0) {
+                        particles[i] = particles[particles.length - 1];
+                        particles.pop();
+                        i--;
+                    }
+                }
+            }
+
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('mousedown', (event) => {
+            if (!fxEnabled) return;
+            if (event.target.closest('.top-ui-bar')) return;
+
+            if (drawModeActive) {
+                if (event.button === 0) {
+                    isDrawingTrail = true;
+                    lastTrailX = null;
+                    lastTrailY = null;
+                    addPermanentTrailPoint(event.clientX, event.clientY);
+                } else if (event.button === 2) {
+                    isDrawingTrail = false;
+                    lastTrailX = null;
+                    lastTrailY = null;
+                }
+            } else {
+                if (event.button === 0) {
+                    createParticles(event.clientX, event.clientY, 26, true);
+                }
+            }
+        });
+
+        window.addEventListener('mousemove', (event) => {
+            if (!fxEnabled) return;
+            if (event.target.closest('.top-ui-bar')) return;
+
+            if (drawModeActive) {
+                if (isDrawingTrail || event.buttons === 1) {
+                    addPermanentTrailPoint(event.clientX, event.clientY);
+                }
+            } else {
+                createParticles(event.clientX, event.clientY, 2, false);
+            }
+        });
+
+        window.addEventListener('mouseup', (event) => {
+            if (!fxEnabled) return;
+            if (drawModeActive && event.button === 0) {
+                isDrawingTrail = false;
+                lastTrailX = null;
+                lastTrailY = null;
+            }
+        });
+
+        window.addEventListener('touchstart', (event) => {
+            if (!fxEnabled) return;
+            if (event.target.closest('.top-ui-bar')) return;
+            const touch = event.touches[0];
+            if (!touch) return;
+
+            if (drawModeActive) {
+                isDrawingTrail = true;
+                lastTrailX = null;
+                lastTrailY = null;
+                addPermanentTrailPoint(touch.clientX, touch.clientY);
+            } else {
+                createParticles(touch.clientX, touch.clientY, 22, true);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (event) => {
+            if (!fxEnabled) return;
+            if (event.target.closest('.top-ui-bar')) return;
+            const touch = event.touches[0];
+            if (!touch) return;
+
+            if (drawModeActive) {
+                if (isDrawingTrail) addPermanentTrailPoint(touch.clientX, touch.clientY);
+            } else {
+                createParticles(touch.clientX, touch.clientY, 2, false);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            if (!fxEnabled) return;
+            if (drawModeActive) {
+                isDrawingTrail = false;
+                lastTrailX = null;
+                lastTrailY = null;
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = staticCanvas.width;
+            tempCanvas.height = staticCanvas.height;
+            tempCanvas.getContext('2d').drawImage(staticCanvas, 0, 0);
+
+            canvas.width = staticCanvas.width = window.innerWidth;
+            canvas.height = staticCanvas.height = window.innerHeight;
+            staticCtx.drawImage(tempCanvas, 0, 0);
+        });
+
+        animateParticles();
     </script>
 </body>
 </html>
