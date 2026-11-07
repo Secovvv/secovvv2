@@ -487,7 +487,7 @@
             display: none;
         }
 
-        /* Kayan Beyaz Kedi Şeridi */
+        /* Kayan Kedi Şeridi (Ekran Boyutuyla %100 Orantılı Hız) */
         .cat-marquee {
             cursor: pointer;
             width: 100%;
@@ -495,13 +495,24 @@
             padding: 0;
             line-height: 0;
             display: block;
+            overflow: hidden;
+            position: relative;
         }
 
-        .cat-marquee img {
-            height: calc(5 * var(--u));
-            width: auto;
+        .cat-walker-track {
             display: inline-block;
-            vertical-align: middle;
+            will-change: transform;
+            /* 14s kedinin ekranı baştan sona geçme süresidir. Ekran küçüldükçe mesafe kısaldığı için hızı otomatik ve kusursuz yavaşlar */
+            animation: catWalkRight 14s linear infinite;
+        }
+
+        .cat-marquee.paused .cat-walker-track {
+            animation-play-state: paused;
+        }
+
+        @keyframes catWalkRight {
+            0%   { transform: translateX(calc(-10 * var(--u))); }
+            100% { transform: translateX(calc(80vw + (2 * var(--u)))); }
         }
 
         /* Üst Kontrol Paneli */
@@ -1226,10 +1237,14 @@
             <div id="specialEvents"></div>
         </div>
 
+       <!-- Kayan Kedi GIF -->
         <!-- Kayan Kedi GIF -->
-        <marquee behavior="scroll" direction="right" scrollamount="7" class="cat-marquee" onmouseover="stopMarquee()" onmouseout="startMarquee()">
-            <video src="beyazkedi.webm" autoplay loop muted playsinline onloadedmetadata="this.playbackRate=2.0;" alt="Video" id="gifImage" onclick="playAudio('catmiyav.mp3')" style="transform: scale(1.1); width: 130px; height: auto;"></video>
-        </marquee>
+        <div class="cat-marquee" onmouseover="stopMarquee()" onmouseout="startMarquee()">
+            <div class="cat-walker-track" style="animation-duration: 19s;">
+                <video src="beyazkedi.webm" autoplay loop muted playsinline onloadedmetadata="this.playbackRate=2.0;" id="gifImage" onclick="playAudio('catmiyav.mp3')" style="transform: scale(1); width: calc(8.5 * var(--u)); height: auto; display: block;"></video>
+            </div>
+        </div>
+        </div>
         <!-- Üst Kontrol Paneli -->
         <div class="control-grid">
             <div class="left-controls">
@@ -1423,7 +1438,7 @@
 
     </div><!-- TÜM JAVASCRIPT FONKSİYONLARI -->
     <script>
-        // 1. Pencere ve Ctrl+Scroll Ölçekleme
+       // 1. Pencere ve Ctrl+Scroll Ölçekleme
         var baseDPR = window.devicePixelRatio || 1;
 
         function updateZoomScale() {
@@ -1508,12 +1523,18 @@
         // 3. Kayan Kedi ve 10 Kedi Kartı Sesleri
         var timeoutCatMiyav, timeoutTigerRoar;
         function stopMarquee() {
-            document.querySelector('.cat-marquee').stop();
+            var marqueeEl = document.querySelector('.cat-marquee');
+            var vidEl = document.getElementById('gifImage');
+            if (marqueeEl) marqueeEl.classList.add('paused');
+            if (vidEl && vidEl.pause) vidEl.pause();
             timeoutCatMiyav = setTimeout(function() { playAudio('catmiyav.mp3'); }, 2000);
             timeoutTigerRoar = setTimeout(function() { playAudio('tigerroar.mp3'); }, 6000);
         }
         function startMarquee() {
-            document.querySelector('.cat-marquee').start();
+            var marqueeEl = document.querySelector('.cat-marquee');
+            var vidEl = document.getElementById('gifImage');
+            if (marqueeEl) marqueeEl.classList.remove('paused');
+            if (vidEl && vidEl.play) vidEl.play();
             clearTimeout(timeoutCatMiyav);
             clearTimeout(timeoutTigerRoar);
         }
