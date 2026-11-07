@@ -1238,12 +1238,10 @@
         </div>
 
        <!-- Kayan Kedi GIF -->
-        <!-- Kayan Kedi GIF -->
         <div class="cat-marquee" onmouseover="stopMarquee()" onmouseout="startMarquee()">
-            <div class="cat-walker-track" style="animation-duration: 19s;">
+            <div class="cat-walker-track">
                 <video src="beyazkedi.webm" autoplay loop muted playsinline onloadedmetadata="this.playbackRate=2.0;" id="gifImage" onclick="playAudio('catmiyav.mp3')" style="transform: scale(1); width: calc(8.5 * var(--u)); height: auto; display: block;"></video>
             </div>
-        </div>
         </div>
         <!-- Üst Kontrol Paneli -->
         <div class="control-grid">
@@ -1438,14 +1436,23 @@
 
     </div><!-- TÜM JAVASCRIPT FONKSİYONLARI -->
     <script>
-       // 1. Pencere ve Ctrl+Scroll Ölçekleme
+        // 1. Pencere, Ctrl+Scroll Ölçekleme ve Dinamik Kedi Kayma Hızı
         var baseDPR = window.devicePixelRatio || 1;
 
         function updateZoomScale() {
             var currentDPR = window.devicePixelRatio || 1;
             var zoomFactor = currentDPR / baseDPR;
             document.documentElement.style.setProperty('--z', zoomFactor);
+
+            // Ekran daraldıkça kedinin kayma hızını (scrollAmount) orantılı azaltır
+            var catMarquee = document.querySelector('.cat-marquee');
+            if (catMarquee) {
+                var baseSpeed = 7; // 1920px tam ekrandaki temel hız
+                var scaledSpeed = Math.max(1, Math.round(baseSpeed * (window.innerWidth / 1920)));
+                catMarquee.scrollAmount = scaledSpeed;
+            }
         }
+        window.addEventListener('DOMContentLoaded', updateZoomScale);
         updateZoomScale();
         window.addEventListener('resize', updateZoomScale);
         if (window.visualViewport) {
