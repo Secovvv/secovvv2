@@ -1436,23 +1436,14 @@
 
     </div><!-- TÜM JAVASCRIPT FONKSİYONLARI -->
     <script>
-        // 1. Pencere, Ctrl+Scroll Ölçekleme ve Dinamik Kedi Kayma Hızı
+        // 1. Pencere ve Ctrl+Scroll Ölçekleme
         var baseDPR = window.devicePixelRatio || 1;
 
         function updateZoomScale() {
             var currentDPR = window.devicePixelRatio || 1;
             var zoomFactor = currentDPR / baseDPR;
             document.documentElement.style.setProperty('--z', zoomFactor);
-
-            // Ekran daraldıkça kedinin kayma hızını (scrollAmount) orantılı azaltır
-            var catMarquee = document.querySelector('.cat-marquee');
-            if (catMarquee) {
-                var baseSpeed = 7; // 1920px tam ekrandaki temel hız
-                var scaledSpeed = Math.max(1, Math.round(baseSpeed * (window.innerWidth / 1920)));
-                catMarquee.scrollAmount = scaledSpeed;
-            }
         }
-        window.addEventListener('DOMContentLoaded', updateZoomScale);
         updateZoomScale();
         window.addEventListener('resize', updateZoomScale);
         if (window.visualViewport) {
