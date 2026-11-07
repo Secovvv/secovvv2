@@ -620,22 +620,15 @@
             box-shadow: 0 0 calc(0.5 * var(--u)) rgba(124, 252, 0, 0.4);
         }
 
-        /* SECOVVV Başlığı */
-        #hoverMarquee {
+        /* SECOVVV Başlığı (Video Logo) */
+        #secovvvLogoVideo {
             width: calc(28 * var(--u));
-            -webkit-text-stroke: calc(0.15 * var(--u)) white;
-            font-size: calc(5.5 * var(--u));
-            line-height: 1;
-            margin: 0;
-            padding: 0;
-            font-family: serif;
-            text-align: center;
-            font-weight: bolder;
-            color: rgba(0, 0, 0, 0.6);
-        }
-
-        #hoverMarquee:hover {
-            color: transparent;
+            max-height: calc(10 * var(--u));
+            height: auto;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            pointer-events: none;
         }
 
         /* Google Play, YouTube ve İndirme İkonları */
@@ -1234,12 +1227,9 @@
         </div>
 
         <!-- Kayan Kedi GIF -->
-        <marquee behavior="scroll" scrollamount="20" class="cat-marquee" onmouseover="stopMarquee()" onmouseout="startMarquee()">
-            <a href="kelimeyibul.html" target="_blank">
-                <img src="beyazkedi.gif" alt="GIF" id="gifImage" onclick="playAudio('catmiyav.mp3')">
-            </a>
+        <marquee behavior="scroll" direction="right" scrollamount="7" class="cat-marquee" onmouseover="stopMarquee()" onmouseout="startMarquee()">
+            <video src="beyazkedi.webm" autoplay loop muted playsinline onloadedmetadata="this.playbackRate=2.0;" alt="Video" id="gifImage" onclick="playAudio('catmiyav.mp3')" style="transform: scale(1.1); width: 130px; height: auto;"></video>
         </marquee>
-
         <!-- Üst Kontrol Paneli -->
         <div class="control-grid">
             <div class="left-controls">
@@ -1256,9 +1246,7 @@
                 </div>
             </div>
 
-            <marquee behavior="slide" scrollamount="7" direction="down" id="hoverMarquee">
-                SECOVVV
-            </marquee>
+            <video src="secovvv.webm" autoplay loop muted playsinline id="secovvvLogoVideo" title="SECOVVV"></video>
 
             <div class="right-controls">
                 <div class="social-icons">
@@ -1281,11 +1269,15 @@
         <!-- 10 Kedi ve Altlarındaki Kayan İsimler (Linkler kaldırıldı, tıklanınca miyavlar) -->
         <div class="cats-row">
             <div class="cat-card">
-                <img src="Leokucuk.jpg" class="enlarge-on-hover" alt="Leo" onclick="playAudio('catmiyav.mp3')" title="Leo">
+                <a href="ucak-webp-studyo.html" target="_blank" onclick="playAudio('catmiyav.mp3')" title="Leo - Chroma Key & Şeffaf Video Stüdyosu">
+                    <img src="Leokucuk.jpg" class="enlarge-on-hover" alt="Leo">
+                </a>
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">LEO</marquee>
             </div>
             <div class="cat-card">
-                <img src="sirinkucuk.jpg" class="enlarge-on-hover" alt="Şirin" onclick="playAudio('catmiyav.mp3')" title="Şirin">
+                <a href="secovvv-resim-studyo.html" target="_blank" onclick="playAudio('catmiyav.mp3')" title="Şirin - Resim Stüdyosu">
+                    <img src="sirinkucuk.jpg" class="enlarge-on-hover" alt="Şirin">
+                </a>
                 <marquee class="cat-name-marquee" behavior="slide" scrollamount="2" direction="down" onmouseover="this.style.color='white'" onmouseout="this.style.color='navajowhite'">ŞİRİN</marquee>
             </div>
             <div class="cat-card">
