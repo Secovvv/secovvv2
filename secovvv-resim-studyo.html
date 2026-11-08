@@ -2636,24 +2636,32 @@ canvas.addEventListener('mousedown', (e) => {
     return;
   }
 
-  let hitLayer = null;
-  for (let i = layers.length - 1; i >= 0; i--) {
-    if (hitTestLayerAtPoint(layers[i], pt.x, pt.y)) {
-      hitLayer = layers[i];
-      break;
+  // Seçili bir katman varsa (üstünde başka resim olsa bile) doğrudan seçili katmanı taşır.
+  // İpucu: Sahneden tıklayarak başka katmana geçmek istersen Alt + Sol Tık yapabilirsin.
+  let targetLayer = getSelectedLayer();
+
+  if (!targetLayer || !targetLayer.visible || e.altKey) {
+    targetLayer = null;
+    for (let i = layers.length - 1; i >= 0; i--) {
+      if (hitTestLayerAtPoint(layers[i], pt.x, pt.y)) {
+        targetLayer = layers[i];
+        break;
+      }
     }
   }
 
-  if (hitLayer) {
-    selectLayerById(hitLayer.id);
+  if (targetLayer && targetLayer.visible) {
+    if (targetLayer.id !== selectedLayerId) {
+      selectLayerById(targetLayer.id);
+    }
     saveStateToHistory();
     stageInteraction = {
       type: 'move_layer',
-      layer: hitLayer,
+      layer: targetLayer,
       startDocX: pt.x,
       startDocY: pt.y,
-      origX: hitLayer.x,
-      origY: hitLayer.y
+      origX: targetLayer.x,
+      origY: targetLayer.y
     };
   }
 });
