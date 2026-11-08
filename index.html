@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="600">
     <title>Secovvv</title>
 
     <style>
@@ -357,6 +356,8 @@
         }
 
         .menu-dropdown {
+            position: absolute;
+            top: 100%;
             display: none;
             flex-direction: column;
             gap: calc(0.5 * var(--u));
@@ -367,6 +368,15 @@
             padding: calc(0.7 * var(--u));
             box-shadow: 0 calc(0.5 * var(--u)) calc(1.5 * var(--u)) rgba(0, 0, 0, 0.85);
             min-width: calc(13.5 * var(--u));
+            z-index: 1005;
+        }
+
+        .effects-menu-container .menu-dropdown {
+            left: 0;
+        }
+
+        .games-menu-container .menu-dropdown {
+            right: 0;
         }
 
         .menu-dropdown.open {
@@ -502,7 +512,6 @@
         .cat-walker-track {
             display: inline-block;
             will-change: transform;
-            /* 14s kedinin ekranı baştan sona geçme süresidir. Ekran küçüldükçe mesafe kısaldığı için hızı otomatik ve kusursuz yavaşlar */
             animation: catWalkRight 14s linear infinite;
         }
 
@@ -663,7 +672,7 @@
             transform: scale(1.15);
         }
 
-        /* 10 Kedi Kartları (Sayfa bağlantısı kaldırıldı, tıklanınca miyavlar) */
+        /* 10 Kedi Kartları */
         .cats-row {
             display: flex;
             flex-wrap: nowrap;
@@ -791,7 +800,6 @@
             overflow: hidden;
         }
 
-        /* Büyük boyutlu JPEG'leri hiç kesmeden otomatik küçültüp çerçeveye sığdıran kural */
         .slider-image {
             max-width: 100%;
             max-height: 100%;
@@ -830,7 +838,6 @@
             color: black;
         }
 
-        /* Slider Oynat/Duraklat ve Süre Seçici Kontrolleri */
         .slider-ctrl-btn {
             background: rgba(15, 15, 15, 0.85);
             color: lawngreen;
@@ -887,7 +894,6 @@
             outline: none;
         }
 
-        /* Slider Bilgi Çubuğu (Sayaç) */
         .slider-info-bar {
             position: absolute;
             bottom: calc(1 * var(--u));
@@ -905,7 +911,6 @@
             white-space: nowrap;
         }
 
-        /* Slider İleri / Geri Butonları */
         .slider-nav-btn {
             position: absolute;
             top: 50%;
@@ -946,7 +951,6 @@
             right: calc(1.2 * var(--u));
         }
 
-        /* Eksik Fotoğraf Hata Kutusu */
         .missing-photo-box {
             position: relative;
             z-index: 4;
@@ -1130,6 +1134,147 @@
         .heartflake { width: calc(2.8 * var(--u)); height: calc(2.5 * var(--u)); background-image: url('heart2.png'); }
         .bursaflake { width: calc(7 * var(--u)); height: calc(4.2 * var(--u)); background-image: url('tcbayrak.gif'); border-radius: 25%; }
         .parasutflake { width: calc(5.5 * var(--u)); height: calc(6.8 * var(--u)); background-image: url('parasut2.png'); }
+
+        /* ==========================================================================
+           CANLI ZİYARETÇİ VE ÜLKE/ŞEHİR ANALİZ RADARI
+           ========================================================================== */
+        .analytics-section {
+            width: calc(58 * var(--u));
+            background: rgba(10, 14, 18, 0.92);
+            border: calc(0.18 * var(--u)) solid lawngreen;
+            border-radius: calc(2 * var(--u));
+            padding: calc(1.8 * var(--u));
+            margin: calc(1.5 * var(--u)) 0;
+            box-shadow: 0 0 calc(2 * var(--u)) rgba(124, 252, 0, 0.25);
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        .analytics-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: calc(0.1 * var(--u)) solid rgba(255, 255, 255, 0.15);
+            padding-bottom: calc(0.8 * var(--u));
+            margin-bottom: calc(1.2 * var(--u));
+        }
+
+        .analytics-title {
+            font-size: calc(1.5 * var(--u));
+            font-weight: bold;
+            color: lawngreen;
+            display: flex;
+            align-items: center;
+            gap: calc(0.5 * var(--u));
+            text-shadow: 0 0 calc(0.5 * var(--u)) rgba(124, 252, 0, 0.5);
+        }
+
+        .admin-shield-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: #aaa;
+            border: calc(0.1 * var(--u)) solid #555;
+            border-radius: calc(1 * var(--u));
+            padding: calc(0.35 * var(--u)) calc(0.8 * var(--u));
+            font-size: calc(0.85 * var(--u));
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .admin-shield-btn.active {
+            background: rgba(255, 215, 0, 0.18);
+            color: #ffd700;
+            border-color: #ffd700;
+            box-shadow: 0 0 calc(0.6 * var(--u)) rgba(255, 215, 0, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: calc(0.8 * var(--u));
+            margin-bottom: calc(1.2 * var(--u));
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: calc(0.1 * var(--u)) solid rgba(255, 255, 255, 0.12);
+            border-radius: calc(1 * var(--u));
+            padding: calc(0.8 * var(--u));
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: calc(1.9 * var(--u));
+            font-weight: 900;
+            color: #00ff41;
+            font-family: monospace;
+            text-shadow: 0 0 calc(0.5 * var(--u)) rgba(0, 255, 65, 0.5);
+        }
+
+        .stat-label {
+            font-size: calc(0.85 * var(--u));
+            color: #cbd5e1;
+            margin-top: calc(0.2 * var(--u));
+            font-weight: bold;
+        }
+
+        .analytics-lists {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: calc(1 * var(--u));
+        }
+
+        .analytics-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: calc(0.1 * var(--u)) solid rgba(255, 255, 255, 0.1);
+            border-radius: calc(1 * var(--u));
+            padding: calc(0.8 * var(--u));
+            height: calc(14 * var(--u));
+            display: flex;
+            flex-direction: column;
+        }
+
+        .analytics-box h4 {
+            margin: 0 0 calc(0.5 * var(--u)) 0;
+            font-size: calc(0.95 * var(--u));
+            color: #ffd700;
+            border-bottom: calc(0.08 * var(--u)) solid #333;
+            padding-bottom: calc(0.3 * var(--u));
+        }
+
+        .visitor-list {
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: calc(0.35 * var(--u));
+            font-size: calc(0.88 * var(--u));
+            padding-right: calc(0.3 * var(--u));
+        }
+
+        .visitor-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.04);
+            padding: calc(0.3 * var(--u)) calc(0.6 * var(--u));
+            border-radius: calc(0.4 * var(--u));
+            font-family: monospace;
+        }
+
+        .visitor-loc {
+            color: #e2e8f0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .visitor-time {
+            color: lawngreen;
+            font-size: calc(0.8 * var(--u));
+            flex-shrink: 0;
+            margin-left: calc(0.5 * var(--u));
+        }
     </style>
 </head>
 
@@ -1169,7 +1314,7 @@
                         <div class="switch-thumb"></div>
                     </div>
                 </div>
-                <span id="drawHint" class="hint-badge">Sol Tık: Çiz | Sağ Tık: Durdur</span>
+                <span id="drawHint" style="display:none !important;"></span>
                 <button id="clearBtn" class="clear-btn" onclick="clearCanvasAll()">🗑️ Temizle</button>
             </div>
         </div>
@@ -1243,6 +1388,7 @@
                 <video src="beyazkedi.webm" autoplay loop muted playsinline onloadedmetadata="this.playbackRate=2.0;" id="gifImage" onclick="playAudio('catmiyav.mp3')" style="transform: scale(1); width: calc(8.5 * var(--u)); height: auto; display: block;"></video>
             </div>
         </div>
+
         <!-- Üst Kontrol Paneli -->
         <div class="control-grid">
             <div class="left-controls">
@@ -1279,7 +1425,7 @@
             </div>
         </div>
 
-        <!-- 10 Kedi ve Altlarındaki Kayan İsimler (Linkler kaldırıldı, tıklanınca miyavlar) -->
+        <!-- 10 Kedi ve Altlarındaki Kayan İsimler -->
         <div class="cats-row">
             <div class="cat-card">
                 <a href="ucak-webp-studyo.html" target="_blank" onclick="playAudio('catmiyav.mp3')" title="Leo - Chroma Key & Şeffaf Video Stüdyosu">
@@ -1345,7 +1491,7 @@
                 <div class="slider-info-bar" id="sliderInfoBar">Yükleniyor...</div>
             </div>
 
-            <!-- Slider Kontrol Barı: Oynat/Duraklat, Geçiş Süresi ve Klasörden Resim Seçme -->
+            <!-- Slider Kontrol Barı -->
             <div class="folder-upload-bar">
                 <button type="button" id="sliderPlayPauseBtn" class="slider-ctrl-btn" title="Slayt Gösterisini Duraklat / Devam Ettir">
                     ⏸ Duraklat
@@ -1398,7 +1544,7 @@
 
         <!-- Klavye Kedi ve İletişim Formu -->
         <div class="contact-section">
-            <img id="klavyeKedi" src="klavyekedi.gif" alt="klavyekedi.gif">
+            <video id="klavyeKedi" src="klavyekedi.webm" autoplay loop muted playsinline></video>
             <div class="contact-form-container">
                 <div class="contact-form">
                     <h2>İletişim Formu</h2>
@@ -1425,6 +1571,50 @@
                         <textarea id="message" name="message" rows="4" required></textarea>
                         <button type="button" id="contactSubmitBtn" onclick="validateForm(event)">Gönder</button>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canlı Ziyaretçi ve Ülke/Şehir Analiz Paneli -->
+        <div class="analytics-section">
+            <div class="analytics-header">
+                <div class="analytics-title">🌍 Canlı Ziyaretçi & Konum Radarı</div>
+                <button type="button" id="adminIgnoreBtn" class="admin-shield-btn" onclick="toggleAdminIgnore()" title="Kendi bilgisayarını ve telefonunu sayaçtan hariç tutmak için tıkla">
+                    👤 Ziyaretçi Modu (Sayılıyor)
+                </button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statToday">-</div>
+                    <div class="stat-label">📅 Bugün</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statMonth">-</div>
+                    <div class="stat-label">📆 Bu Ay</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statYear">-</div>
+                    <div class="stat-label">🗓️ Bu Yıl</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotal">-</div>
+                    <div class="stat-label">🚀 Toplam</div>
+                </div>
+            </div>
+
+            <div class="analytics-lists">
+                <div class="analytics-box">
+                    <h4>📍 Son Girişler (Ülke / Şehir)</h4>
+                    <div class="visitor-list" id="recentVisitorsList">
+                        <div class="visitor-item"><span class="visitor-loc">Veriler yükleniyor...</span></div>
+                    </div>
+                </div>
+                <div class="analytics-box">
+                    <h4>🏆 Ülke Dağılımı</h4>
+                    <div class="visitor-list" id="topCountriesList">
+                        <div class="visitor-item"><span class="visitor-loc">Veriler yükleniyor...</span></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1517,7 +1707,6 @@
         }
         setInterval(updateClock, 1000);
         window.addEventListener('load', updateClock);
-
         // 3. Kayan Kedi ve 10 Kedi Kartı Sesleri
         var timeoutCatMiyav, timeoutTigerRoar;
         function stopMarquee() {
@@ -1544,7 +1733,6 @@
         // 4. İpek Resmine Tıkladıkça Sırayla Arka Plan Değiştirme
         let bgCycleIndex = 0;
         const backgroundThemes = [
-            // Kedinin gözlerini yuvarlak kedi sırasının üstüne (SECOVVV hizasına) çeker
             { type: 'image', value: "url('blackcatbu.jpg')", position: "center -54vh", size: "100% auto" },
             { type: 'color', value: 'Khaki' },
             { type: 'color', value: 'darkgoldenrod' },
@@ -1575,7 +1763,7 @@
             bgCycleIndex = (bgCycleIndex + 1) % backgroundThemes.length;
         }
 
-        // 5. PRO MÜZİK ÇALAR (Play / Pause / Stop / İleri / Geri / Rastgele + Klasörden Çoklu MP3 Seçme)
+        // 5. PRO MÜZİK ÇALAR (Play / Pause / Stop / İleri / Geri / Rastgele Modu + Hata Atlama + Çoklu MP3 Seçme)
         let playlist = [
             "darkness.mp3", "akon.mp3", "glassanimals.mp3", "chain.mp3",
             "ozone.mp3", "maroon.mp3", "reason.mp3", "waving Flag.mp3",
@@ -1586,7 +1774,9 @@
         let currentTrackIdx = Math.floor(Math.random() * playlist.length);
         let audioElement = new Audio();
         let isPlayingMusic = false;
-        let currentAudioObjectUrl = null; // Yerel MP3 seçildiğinde RAM şişmesini önler
+        let isShuffleMusic = true;
+        let failedTrackCount = 0;
+        let currentAudioObjectUrl = null;
 
         const trackTitleDisplay = document.getElementById('trackTitleDisplay');
         const playPauseTrackBtn = document.getElementById('playPauseTrackBtn');
@@ -1595,7 +1785,10 @@
         const nextTrackBtn = document.getElementById('nextTrackBtn');
         const shuffleTrackBtn = document.getElementById('shuffleTrackBtn');
 
-        // Müzik çalar kontrollerinin yanına otomatik "📁" (Çoklu MP3 Seç) butonu ekler
+        if (shuffleTrackBtn && isShuffleMusic) {
+            shuffleTrackBtn.classList.add('play-active');
+        }
+
         (function injectLocalMusicPicker() {
             if (!shuffleTrackBtn || document.getElementById('localMusicInput')) return;
             const fileInput = document.createElement('input');
@@ -1624,7 +1817,8 @@
                         });
                     }
                     playlist = localTracks;
-                    loadAndPlayTrack(0); // Seçilen ilk şarkıyı hemen çalmaya başlar
+                    failedTrackCount = 0;
+                    loadAndPlayTrack(0);
                 }
             });
 
@@ -1650,6 +1844,31 @@
             }
         }
 
+        function getNextTrackIndex(direction = 1) {
+            if (playlist.length <= 1) return 0;
+            if (isShuffleMusic) {
+                let nextIdx = currentTrackIdx;
+                while (nextIdx === currentTrackIdx) {
+                    nextIdx = Math.floor(Math.random() * playlist.length);
+                }
+                return nextIdx;
+            }
+            return (currentTrackIdx + direction + playlist.length) % playlist.length;
+        }
+
+        function skipBrokenTrack() {
+            failedTrackCount++;
+            if (failedTrackCount >= playlist.length) {
+                isPlayingMusic = false;
+                failedTrackCount = 0;
+                updatePlayerUI('⚠️ Dosya Yok:');
+                return;
+            }
+            setTimeout(() => {
+                loadAndPlayTrack(getNextTrackIndex(1));
+            }, 300);
+        }
+
         function loadAndPlayTrack(index) {
             if (playlist.length === 0) return;
             if (index < 0) index = playlist.length - 1;
@@ -1668,23 +1887,32 @@
             }
 
             audioElement.play().then(() => {
+                failedTrackCount = 0;
                 isPlayingMusic = true;
                 updatePlayerUI();
-            }).catch(() => {
-                isPlayingMusic = false;
-                updatePlayerUI('⚠️');
+            }).catch((err) => {
+                if (err && err.name === 'NotAllowedError') {
+                    isPlayingMusic = false;
+                    updatePlayerUI('⏸');
+                } else {
+                    skipBrokenTrack();
+                }
             });
         }
 
         function togglePlayPause() {
             if (!audioElement.src) {
+                failedTrackCount = 0;
                 loadAndPlayTrack(currentTrackIdx);
                 return;
             }
             if (audioElement.paused) {
-                audioElement.play();
-                isPlayingMusic = true;
-                updatePlayerUI();
+                audioElement.play().then(() => {
+                    isPlayingMusic = true;
+                    updatePlayerUI();
+                }).catch(() => {
+                    skipBrokenTrack();
+                });
             } else {
                 audioElement.pause();
                 isPlayingMusic = false;
@@ -1700,16 +1928,26 @@
         }
 
         audioElement.addEventListener('ended', () => {
-            loadAndPlayTrack(currentTrackIdx + 1);
+            loadAndPlayTrack(getNextTrackIndex(1));
         });
 
         playPauseTrackBtn.addEventListener('click', togglePlayPause);
         stopTrackBtn.addEventListener('click', stopMusic);
-        nextTrackBtn.addEventListener('click', () => loadAndPlayTrack(currentTrackIdx + 1));
-        prevTrackBtn.addEventListener('click', () => loadAndPlayTrack(currentTrackIdx - 1));
+        nextTrackBtn.addEventListener('click', () => {
+            failedTrackCount = 0;
+            loadAndPlayTrack(getNextTrackIndex(1));
+        });
+        prevTrackBtn.addEventListener('click', () => {
+            failedTrackCount = 0;
+            loadAndPlayTrack(getNextTrackIndex(-1));
+        });
         shuffleTrackBtn.addEventListener('click', () => {
-            const randomIdx = Math.floor(Math.random() * playlist.length);
-            loadAndPlayTrack(randomIdx);
+            isShuffleMusic = !isShuffleMusic;
+            shuffleTrackBtn.classList.toggle('play-active', isShuffleMusic);
+            if (!isPlayingMusic) {
+                failedTrackCount = 0;
+                loadAndPlayTrack(getNextTrackIndex(1));
+            }
         });
 
         // 6. Murphy Kanunları
@@ -1737,7 +1975,7 @@
         }
         setInterval(updateQuote, 5000);
 
-        // 7. GITHUB OTOMATİK KLASÖR TARAMALI PRO PHOTO SLIDER (AÇILIŞTA KARIŞIK MOD + 3 SN + PLAY/PAUSE)
+        // 7. GITHUB OTOMATİK KLASÖR TARAMALI PRO PHOTO SLIDER
         const GITHUB_SLIDER_FOLDER = 'slider'; 
         const DEFAULT_GH_USER = 'sechow';
         const DEFAULT_GH_REPO = 'sechow.github.io';
@@ -1779,7 +2017,6 @@
         const sliderPlayPauseBtn = document.getElementById('sliderPlayPauseBtn');
         const sliderSpeedSelect = document.getElementById('sliderSpeedSelect');
 
-        // Arka plan blur efektini GPU'yu dondurmadan üretmek için mini kanvas (64x64)
         const blurThumbCanvas = document.createElement('canvas');
         blurThumbCanvas.width = 64;
         blurThumbCanvas.height = 64;
@@ -1789,11 +2026,10 @@
         let sliderTimer = null;
         let isHoverPaused = false;
         let isManualPaused = false;
-        let isShuffleMode = true;   // Sayfa ilk açıldığında doğrudan Karışık (true) modda başlar
-        let slideIntervalMs = 3000; // Sayfa ilk açıldığında doğrudan 3 saniye (3000 ms) ile başlar
-        if (sliderSpeedSelect) sliderSpeedSelect.value = "3000"; // Kutucuğu otomatik "3 sn" seçili yapar
+        let isShuffleMode = true;
+        let slideIntervalMs = 3000;
+        if (sliderSpeedSelect) sliderSpeedSelect.value = "3000";
 
-        // Duraklat butonunun soluna otomatik "Sıralı / Karışık" Switch'ini (Karışık seçili olarak) ekler
         (function injectOrderSwitch() {
             if (!sliderPlayPauseBtn || document.getElementById('sliderOrderSwitch')) return;
             const sw = document.createElement('div');
@@ -1895,7 +2131,6 @@
             showSlide(currentSlideIdx);
         }
 
-        // Resim ismi gösterilmez, sadece fotoğraf sırası / toplam sayı yazar
         function updateSliderInfoText(isError = false) {
             const total = getTotalSlides();
             const modeTag = isShuffleMode ? ' 🔀' : '';
@@ -2022,7 +2257,6 @@
             }
         }
 
-        // Play / Pause Butonu İşlevi
         sliderPlayPauseBtn.addEventListener('click', () => {
             isManualPaused = !isManualPaused;
             isHoverPaused = false;
@@ -2040,7 +2274,6 @@
             }
         });
 
-        // Geçiş Süresi Seçici İşlevi
         sliderSpeedSelect.addEventListener('change', function(e) {
             slideIntervalMs = parseInt(this.value, 10) || 3000;
             isHoverPaused = false;
@@ -2060,7 +2293,6 @@
             prevSlide();
         });
 
-        // 12.000+ dosyayı sıfır döngü ve sıfır kopyalama ile doğrudan bağlar
         localFilesInput.addEventListener('change', function(e) {
             if (e.target.files && e.target.files.length > 0) {
                 localFileList = e.target.files;
@@ -2089,7 +2321,7 @@
             lastClickTime = currentTime;
         });
 
-        // 9. İletişim Formu (Doğrudan secovvv@gmail.com Google Script Köprüsü - %100 Garantili)
+        // 9. İletişim Formu
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXtJ9GC5n95ZZ7J1m_r3YWlqUmXtA_Xw100-2AB1qC7TdZ26s0afpBKU4E31Szh6eV/exec";
 
         function validateForm(event) {
@@ -2267,7 +2499,6 @@
         document.getElementById('toggleBayrakBtn').addEventListener('click', () => toggleBayrak());
         document.getElementById('toggleParasutBtn').addEventListener('click', () => toggleParasut());
 
-        // Özel Günlerde Otomatik Başlatma
         const currentMonth = new Date().getMonth() + 1;
         const currentDay = new Date().getDate();
 
@@ -3158,6 +3389,174 @@
         });
 
         animateParticles();
+
+        // =========================================================================
+        // 12. CANLI ZİYARETÇİ, ÜLKE/ŞEHİR RADARI VE ADMİN KORUMA SİSTEMİ
+        // =========================================================================
+        const ANALYTICS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYisHGorNrFHIusPx2V4P9NFcBde6TivIY_cjMZs4ND6PziOs1b7HBej3hoRxOjHlAyQ/exec";
+
+        function isOwnerIgnored() {
+            if (location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                return true;
+            }
+            return localStorage.getItem('secovvv_ignore_me') === 'true';
+        }
+
+        function updateAdminShieldUI() {
+            const btn = document.getElementById('adminIgnoreBtn');
+            if (!btn) return;
+            const ignored = localStorage.getItem('secovvv_ignore_me') === 'true';
+            const isLocal = (location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
+            if (ignored || isLocal) {
+                btn.classList.add('active');
+                btn.textContent = isLocal ? '🛡️ Yerel Test (Sayım Kapalı)' : '👑 Admin Cihazı (Beni Sayma Aktif)';
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = '👤 Ziyaretçi Modu (Sayılıyor)';
+            }
+        }
+
+        function toggleAdminIgnore() {
+            const current = localStorage.getItem('secovvv_ignore_me') === 'true';
+            localStorage.setItem('secovvv_ignore_me', !current ? 'true' : 'false');
+            updateAdminShieldUI();
+        }
+
+        function countryCodeToFlag(code) {
+            if (!code || code.length !== 2) return '🌍';
+            return String.fromCodePoint(...code.toUpperCase().split('').map(c => 127397 + c.charCodeAt()));
+        }
+
+        async function getVisitorLocation() {
+            try {
+                const res = await fetch('https://ipwho.is/');
+                const data = await res.json();
+                if (data && data.success !== false && data.country) {
+                    return {
+                        country: data.country,
+                        city: data.city || data.region || 'Merkez',
+                        flag: (data.flag && data.flag.emoji) ? data.flag.emoji : countryCodeToFlag(data.country_code)
+                    };
+                }
+            } catch (e) {}
+
+            try {
+                const res2 = await fetch('https://ipapi.co/json/');
+                const data2 = await res2.json();
+                if (data2 && data2.country_name) {
+                    return {
+                        country: data2.country_name,
+                        city: data2.city || 'Merkez',
+                        flag: countryCodeToFlag(data2.country_code)
+                    };
+                }
+            } catch (e) {}
+
+            return { country: 'Türkiye', city: 'İstanbul', flag: '🇹🇷' };
+        }
+
+        function renderAnalyticsUI(data) {
+            if (!data) return;
+            document.getElementById('statToday').textContent = data.today ?? 0;
+            document.getElementById('statMonth').textContent = data.month ?? 0;
+            document.getElementById('statYear').textContent = data.year ?? 0;
+            document.getElementById('statTotal').textContent = data.total ?? 0;
+
+            const recentEl = document.getElementById('recentVisitorsList');
+            if (data.recent && data.recent.length > 0) {
+                recentEl.innerHTML = data.recent.map(item => `
+                    <div class="visitor-item">
+                        <span class="visitor-loc">${item.flag || '🌍'} ${item.country} - ${item.city}</span>
+                        <span class="visitor-time">${item.time || ''}</span>
+                    </div>
+                `).join('');
+            } else {
+                recentEl.innerHTML = `<div class="visitor-item"><span class="visitor-loc">Henüz kayıt yok</span></div>`;
+            }
+
+            const countriesEl = document.getElementById('topCountriesList');
+            const cEntries = Object.entries(data.countries || {}).sort((a, b) => b[1] - a[1]);
+            if (cEntries.length > 0) {
+                countriesEl.innerHTML = cEntries.map(([name, count]) => `
+                    <div class="visitor-item">
+                        <span class="visitor-loc">${name}</span>
+                        <span class="visitor-time">${count} kişi</span>
+                    </div>
+                `).join('');
+            } else {
+                countriesEl.innerHTML = `<div class="visitor-item"><span class="visitor-loc">Henüz kayıt yok</span></div>`;
+            }
+        }
+
+        function loadAnalyticsViaJSONP(url, onSuccess, onError) {
+            const cbName = "secovvvStatsCB_" + Date.now();
+            const script = document.createElement("script");
+            const timer = setTimeout(() => {
+                cleanup();
+                if (onError) onError();
+            }, 8000);
+
+            function cleanup() {
+                clearTimeout(timer);
+                delete window[cbName];
+                if (script.parentNode) script.parentNode.removeChild(script);
+            }
+
+            window[cbName] = function(data) {
+                cleanup();
+                onSuccess(data);
+            };
+
+            script.onerror = function() {
+                cleanup();
+                if (onError) onError();
+            };
+
+            script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cbName;
+            document.body.appendChild(script);
+        }
+
+        async function initSecovvvAnalytics() {
+            updateAdminShieldUI();
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const alreadyCountedToday = localStorage.getItem('secovvv_counted_date') === todayStr;
+            const shouldRecordHit = !isOwnerIgnored() && !alreadyCountedToday;
+
+            let url = `${ANALYTICS_SCRIPT_URL}?action=get`;
+
+            if (shouldRecordHit) {
+                const loc = await getVisitorLocation();
+                const params = new URLSearchParams({
+                    action: 'hit',
+                    country: loc.country,
+                    city: loc.city,
+                    flag: loc.flag
+                });
+                url = `${ANALYTICS_SCRIPT_URL}?${params.toString()}`;
+            }
+
+            loadAnalyticsViaJSONP(url, (statsData) => {
+                renderAnalyticsUI(statsData);
+                if (shouldRecordHit) {
+                    localStorage.setItem('secovvv_counted_date', todayStr);
+                }
+            }, async () => {
+                try {
+                    const response = await fetch(url);
+                    const statsData = await response.json();
+                    renderAnalyticsUI(statsData);
+                    if (shouldRecordHit) {
+                        localStorage.setItem('secovvv_counted_date', todayStr);
+                    }
+                } catch (err) {
+                    document.getElementById('recentVisitorsList').innerHTML = `<div class="visitor-item"><span class="visitor-loc" style="color:#ff5e7e;">⚠️ Bağlantı izni bekleniyor</span></div>`;
+                    document.getElementById('topCountriesList').innerHTML = `<div class="visitor-item"><span class="visitor-loc">Veri alınamadı</span></div>`;
+                }
+            });
+        }
+
+        initSecovvvAnalytics();
     </script>
 </body>
 </html>
